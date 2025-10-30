@@ -1,0 +1,15 @@
+apiVersion: v2
+name: odrl-authorization
+description: Umbrella chart to deploy FIWARE Data Space Connector stack
+type: application
+version: 1.0.0
+dependencies:
+  # authorization
+  - name: odrl-pap
+    condition: odrl-pap.enabled
+    version: 2.0.2
+    repository: https://fiware.github.io/helm-charts
+  - name: apisix
+    condition: apisix.enabled
+    version: 3.5.1
+    repository: oci://registry-1.docker.io/bitnamicharts

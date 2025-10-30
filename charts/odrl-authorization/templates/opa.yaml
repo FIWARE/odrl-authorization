@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-lua
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "odrl-auth.labels" . | nindent 4 }}
+data:
+  # extends the apisix opa-plugin to forward the http-body as part of the decision request.
+  opa.lua: |-
+    {{ .Files.Get "files/apixis-opa.lua" | nindent 4 }}
+  helper.lua: |-
+    {{ .Files.Get "files/apixis-helper.lua" | nindent 4 }}

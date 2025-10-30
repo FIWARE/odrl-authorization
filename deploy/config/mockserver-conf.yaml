@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mockserver-config-cm
+data:
+  response.json: |
+    [
+      {
+        "httpRequest" : {
+          "method" : "GET",
+          "path" : "/.well-known/openid-configuration"
+        },
+        "httpResponse" : {
+          "body" : "{\"issuer\":\"http://mockserver:8080\",\"authorization_endpoint\":\"http://mockserver:8080\",\"token_endpoint\":\"http://mockserver:8080/services/data-service/token\",\"jwks_uri\":\"http://mockserver:8080/.well-known/jwks\",\"scopes_supported\":[\"operator\",\"default\"],\"response_types_supported\":[\"token\"],\"response_mode_supported\":[\"direct_post\"],\"grant_types_supported\":[\"authorization_code\",\"vp_token\"],\"subject_types_supported\":[\"public\"],\"id_token_signing_alg_values_supported\":[\"EdDSA\",\"ES256\"]}",
+          "statusCode": 200,
+          "headers": {
+            "Content-Type": [ "application/json" ]
+          }
+        }
+      },
+      {
+        "httpRequest" : {
+          "method" : "GET",
+          "path" : "/.well-known/jwks"
+        },
+        "httpResponse" : {
+          "body" : "{\"keys\":[{\"alg\":\"RS512\",\"e\":\"AQAB\",\"key_ops\":[\"verify\"],\"kty\":\"RSA\",\"n\":\"tFaGwle8cPGfvkZCeDWxnaQjD6t5uHnbJ57Q3sLeEpdBelAhs_62yPzYryadHLEG7SerPNgcFBfPg8W6ZFo97dP98D-I-6iso37wIQojuK52JgtkTb0EhnuPXMzYltIhhjWg0CXSIZ7XgB5hp1VWhVLjW-HOEogL40OfN3JzpXX3_RKopOVHHTVagUbVhqx7CdCspWDFdLS6i0FJKvlQdhK7KZw7bgu8gI0Pw42cuCTUKMKytthqtDRUVwPz1graJmetKSeWB5zl7AaCK0-uepQntcOY_3fUUSF1FVZJtiz39SHEEtUey8YMziwbSmLwDk8JJmzmTGiESwSQnSZfMH_f0z7gekCGQqpMFrl_zV1sFc0DMBOeC1PXSvuoOmgdzWbnROzN7EZTSQfmhx0icZr8mwAcHhfJL7ut24hrAun7t3QgFBRufbPE5vUv2Cmr4F2HrxV_62DBbHIu-Clxy8T-BAffurFcZm7oZj1MaW5TRZFF_xydvZSnlzaBYbW1\",\"use\":\"sig\",\"kid\":\"256c1b3d5c9b083f09d14198ba0f1e24\"}]}",
+          "statusCode": 200,
+          "headers": {
+            "Content-Type": [ "application/json" ]
+          }
+        }
+      },
+      {
+        "httpRequest" : {
+          "method" : "GET",
+          "path" : "/broker"
+        },
+        "httpResponse" : {
+          "body" : "{\"result\":\"success\"}",
+          "statusCode": 200,
+          "headers": {
+            "Content-Type": [ "application/json" ]
+          }
+        }
+      }
+    ]
+  mockserver.properties: |
+    mockserver.initializationJsonPath=/config/response.json

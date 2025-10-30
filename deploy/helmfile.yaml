@@ -1,0 +1,117 @@
+repositories:
+- name: ingress-nginx
+  url: https://kubernetes.github.io/ingress-nginx
+- name: postgres-operator
+  url: https://opensource.zalando.com/postgres-operator/charts/postgres-operator
+- name: vcverifier
+  url: https://fiware.github.io/helm-charts
+- name: mockserver
+  url: https://www.mock-server.com
+
+releases:
+- name: ingress-nginx
+  namespace: ingress-nginx
+  chart: ingress-nginx/ingress-nginx
+  version: 4.13.1
+  values:
+    - controller:
+        service:
+          type: NodePort
+          nodePorts:
+            http: 30080
+            https: 30443
+- name: psql
+  namespace: odrl-authorization
+  chart: postgres-operator/postgres-operator
+  version: 1.13.0
+  hooks:
+    - events: ["postsync"]
+      showlogs: true
+      command: "kubectl"
+      args:
+        - "apply"
+        - "-n"
+        - "{{ .Release.Namespace }}"
+        - "-f"
+        - "./config/postgresql.yaml"
+    - events: ["preuninstall"]
+      showlogs: true
+      command: "kubectl"
+      args:
+        - "delete"
+        - "-n"
+        - "{{ .Release.Namespace }}"
+        - "-f"
+        - "./config/postgresql.yaml"
+- name: mockserver
+  namespace: odrl-authorization
+  chart: mockserver/mockserver
+  needs:
+    - ingress-nginx/ingress-nginx
+  hooks:
+  - events: ["presync"]
+    showlogs: true
+    command: "kubectl"
+    args:
+      - "apply"
+      - "-n"
+      - "{{ .Release.Namespace }}"
+      - "-f"
+      - "./config/mockserver-conf.yaml"
+  - events: ["postuninstall"]
+    showlogs: true
+    command: "kubectl"
+    args:
+      - "delete"
+      - "-n"
+      - "{{ .Release.Namespace }}"
+      - "-f"
+      - "./config/mockserver-conf.yaml"
+  values:
+    - app:
+        mountedConfigMapName: mockserver-config-cm
+      service:
+        type: ClusterIP
+        port: 8080
+
+- name: odrl-authorization
+  namespace: odrl-authorization
+  chart: ../charts/odrl-authorization
+  version: 1.0.0
+  needs:
+    - ingress-nginx/ingress-nginx
+    - mockserver
+    - psql
+  values:
+    - apisix:
+        dataPlane:
+          ingress:
+            enabled: true
+            hostname: apisix.127.0.0.1.nip.io
+            ingressClassName: nginx
+            extraHosts:
+              - name: apisix.127.0.0.1.nip.io
+                path: /
+        catchAllRoute:
+          upstream:
+            url: mockserver:8080
+          oidc:
+            discoveryEndpoint: http://mockserver:8080/.well-known/openid-configuration
+      odrl-pap:
+        # -- connection to the database
+        database:
+          # -- url to connect the db at
+          url: jdbc:postgresql://postgres:5432/odrl
+          # -- username to access the db
+          username: odrl
+          # -- secret to take the password from
+          existingSecret:
+            enabled: true
+            name: odrl.postgres.credentials.postgresql.acid.zalan.do
+            key: password
+        ingress:
+          enabled: true
+          hosts:
+          - host: pap.127.0.0.1.nip.io
+            paths:
+              - "/"

@@ -1,0 +1,25 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: postgres
+spec:
+  teamId: odrl-authorization
+  numberOfInstances: 1
+  postgresql:
+    version: "16"
+  volume:
+    size: 1Gi
+    storageClass: "standard"
+  users:
+    admin: # maintainer
+      - superuser
+      - createdb
+    odrl:
+      - createdb
+  databases:
+    odrl: odrl
+  patroni:
+    pg_hba: # Allow connections without ssl as db is not exposed
+      - local   all all           trust
+      - hostssl all all 0.0.0.0/0 md5
+      - host    all all 0.0.0.0/0 md5
