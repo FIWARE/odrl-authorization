@@ -97,14 +97,12 @@ releases:
             url: mockserver:8080
           oidc:
             discoveryEndpoint: http://mockserver:8080/.well-known/openid-configuration
+        etcd:
+          replicaCount: 1
       odrl-pap:
-        # -- connection to the database
         database:
-          # -- url to connect the db at
           url: jdbc:postgresql://postgres:5432/odrl
-          # -- username to access the db
           username: odrl
-          # -- secret to take the password from
           existingSecret:
             enabled: true
             name: odrl.postgres.credentials.postgresql.acid.zalan.do
