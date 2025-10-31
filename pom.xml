@@ -8,11 +8,9 @@
     <artifactId>odrl-authorization</artifactId>
     <version>0.0.1</version>
     <packaging>pom</packaging>
-
     <modules>
         <module>it</module>
     </modules>
-
     <properties>
         <jdk.version>21</jdk.version>
         <release.version>21</release.version>
@@ -28,6 +26,8 @@
         <version.localpath>0.0.32</version.localpath>
         <main.basedir>${project.basedir}</main.basedir>
         <kubeconfig.file>${project.build.directory}/k3s.yaml</kubeconfig.file>
+        <skipDeployInfra>true</skipDeployInfra>
+        <skipIT>false</skipIT>
     </properties>
 
     <build>
@@ -85,6 +85,7 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${version.org.apache.maven.plugins.maven-failsafe}</version>
                 <configuration>
+                    <skip>${skipIT}</skip>
                     <failIfNoTests>false</failIfNoTests>
                     <includes>
                         <include>**/RunCucumberTest.java</include>
@@ -120,7 +121,12 @@
                 <artifactId>download-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <skip>true</skip>
+                    <skip>${skipDeployInfra}</skip>
+                    <url>
+                        https://raw.githubusercontent.com/rancher/local-path-provisioner/v${version.localpath}/deploy/local-path-storage.yaml
+                    </url>
+                    <unpack>false</unpack>
+                    <outputDirectory>${project.build.directory}/tmp</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -129,13 +135,13 @@
                         <goals>
                             <goal>wget</goal>
                         </goals>
-                        <configuration>
-                            <url>
-                                https://raw.githubusercontent.com/rancher/local-path-provisioner/v${version.localpath}/deploy/local-path-storage.yaml
-                            </url>
-                            <unpack>false</unpack>
-                            <outputDirectory>${project.build.directory}/tmp</outputDirectory>
-                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-local-storage-it</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -144,12 +150,14 @@
                 <artifactId>k3s-maven-plugin</artifactId>
                 <version>${version.io.kokuwa.maven.k3s-plugin}</version>
                 <configuration>
-                    <skip>true</skip>
+                    <skip>${skipDeployInfra}</skip>
                     <portBindings>
                         <!-- NGINX ingress controller http & https -->
                         <portBinding>80:30080</portBinding>
                         <portBinding>443:30443</portBinding>
                     </portBindings>
+                    <failIfExists>false</failIfExists>
+                    <manifests>${project.build.directory}/tmp/local-path-storage.yaml</manifests>
                 </configuration>
                 <executions>
                     <execution>
@@ -159,10 +167,14 @@
                             <goal>run</goal>
                             <goal>apply</goal>
                         </goals>
-                        <configuration>
-                            <failIfExists>false</failIfExists>
-                            <manifests>${project.build.directory}/tmp/local-path-storage.yaml</manifests>
-                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>deploy-local-storage-it</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>run</goal>
+                            <goal>apply</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -171,7 +183,17 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
-                    <skip>true</skip>
+                    <skip>${skipDeployInfra}</skip>
+                    <executable>helmfile</executable>
+                    <arguments>
+                        <argument>sync</argument>
+                        <argument>-f</argument>
+                        <argument>deploy/helmfile.yaml</argument>
+                        <argument>--wait</argument>
+                    </arguments>
+                    <environmentVariables>
+                        <KUBECONFIG>${kubeconfig.file}</KUBECONFIG>
+                    </environmentVariables>
                 </configuration>
                 <executions>
                     <execution>
@@ -180,18 +202,13 @@
                         <goals>
                             <goal>exec</goal>
                         </goals>
-                        <configuration>
-                            <executable>helmfile</executable>
-                            <arguments>
-                                <argument>sync</argument>
-                                <argument>-f</argument>
-                                <argument>deploy/helmfile.yaml</argument>
-                                <argument>--wait</argument>
-                            </arguments>
-                            <environmentVariables>
-                                <KUBECONFIG>${kubeconfig.file}</KUBECONFIG>
-                            </environmentVariables>
-                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>it-env</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -200,47 +217,17 @@
     <profiles>
         <profile>
             <id>local</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>io.github.download-maven-plugin</groupId>
-                        <artifactId>download-maven-plugin</artifactId>
-                        <version>2.0.0</version>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>io.kokuwa.maven</groupId>
-                        <artifactId>helm-maven-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>io.kokuwa.maven</groupId>
-                        <artifactId>k3s-maven-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <configuration>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>${version.org.apache.maven.plugins.maven-failsafe}</version>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+            <properties>
+                <skipDeployInfra>false</skipDeployInfra>
+                <skipIT>true</skipIT>
+            </properties>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <skipDeployInfra>false</skipDeployInfra>
+                <skipIT>false</skipIT>
+            </properties>
         </profile>
     </profiles>
 
