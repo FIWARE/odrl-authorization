@@ -1,4 +1,6 @@
 charts/odrl-authorization/Chart.lock
 charts/odrl-authorization/charts/
 .idea
+*.iml
 helmfile.lock
+target

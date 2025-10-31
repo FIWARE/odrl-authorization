@@ -92,6 +92,8 @@ releases:
             extraHosts:
               - name: apisix.127.0.0.1.nip.io
                 path: /
+          service:
+            type: ClusterIP
         catchAllRoute:
           upstream:
             url: mockserver:8080
@@ -109,6 +111,8 @@ releases:
             key: password
         ingress:
           enabled: true
+          annotations:
+            kubernetes.io/ingress.class: nginx
           hosts:
           - host: pap.127.0.0.1.nip.io
             paths:

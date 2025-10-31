@@ -9,7 +9,7 @@ spec:
     version: "16"
   volume:
     size: 1Gi
-    storageClass: "standard"
+    storageClass: "local-path"
   users:
     admin: # maintainer
       - superuser
