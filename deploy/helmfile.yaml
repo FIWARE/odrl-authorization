@@ -101,6 +101,11 @@ releases:
             discoveryEndpoint: http://mockserver:8080/.well-known/openid-configuration
         etcd:
           replicaCount: 1
+        opa:
+          config:
+            policies:
+              minDelay: 1
+              maxDelay: 1
       odrl-pap:
         database:
           url: jdbc:postgresql://postgres:5432/odrl

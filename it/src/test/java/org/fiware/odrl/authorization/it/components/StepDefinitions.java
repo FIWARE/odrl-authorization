@@ -2,7 +2,6 @@ package org.fiware.odrl.authorization.it.components;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.HttpServer;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -18,11 +17,8 @@ import org.fiware.odrl.authorization.it.components.model.Policy;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,17 +32,20 @@ public class StepDefinitions {
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient.Builder().build();
     private static final URI PAP_URL = URI.create("http://pap.127.0.0.1.nip.io");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
-    private static final URI BASE_RESOURCE_URL = URI.create("http://apisix.127.0.0.1.nip.io");
-    private static final String VALID_RESOURCE_PATH = "/broker?type=AllowedOperation";
-    private static final String INVALID_RESOURCE_PATH = "/broker?type=DenyOperation";
 
-    private String token;
-    private Response response;
+    private TestContext testContext;
+
+    @Before
+    public void setUp() throws URISyntaxException, IOException {
+
+        String jwt = Files.readString(ResourceLoader.getResourcePath("it/valid-jwt.txt"));
+        this.testContext = new TestContext(jwt, null);
+    }
 
     @After
-    public void cleanUp() throws IOException, InterruptedException {
-        response = null;
-        token = null;
+    public void cleanUp() throws IOException {
+
+        testContext = new TestContext();
         cleanPolicies();
     }
 
@@ -66,7 +65,7 @@ public class StepDefinitions {
     }
 
     @Given("Provider has protected a resource with ODRL policies")
-    public void setUpPolicy() throws IOException, URISyntaxException {
+    public void setUpPolicy() throws IOException, URISyntaxException, InterruptedException {
 
         URI postPolicyUri = PAP_URL.resolve("/policy");
         Path policy = ResourceLoader.getResourcePath("allowPolicy.json");
@@ -74,31 +73,52 @@ public class StepDefinitions {
         Request policyRequest = new Request.Builder()
                 .post(body).url(postPolicyUri.toURL()).build();
 
-        HTTP_CLIENT.newCall(policyRequest).execute();
+        Response response = HTTP_CLIENT.newCall(policyRequest).execute();
+        assertEquals(200, response.code(), "Expected policy to be created successfully");
+        Thread.sleep(1000); // Wait for the policy to be fetched by OPA
     }
 
     @Given("An empty token")
     public void setEmptyToken() {
-        this.token = null;
+
+        this.testContext.setToken(null);
     }
 
-    @When("Consumer requests access to a protected resource without a valid token")
+    @Given("A protected resource not allowed to the consumer")
+    public void setUnauthorizedToken() {
+
+        this.testContext.setAllowed(false);
+    }
+
+    @When("Consumer requests access to a protected resource")
     public void requestProtectedResource() throws IOException {
 
-        URI resourceUri = BASE_RESOURCE_URL.resolve(VALID_RESOURCE_PATH);
+        URI resourceUri = this.testContext.getResourceUrl();
         Request.Builder policyRequest = new Request.Builder()
                 .get().url(resourceUri.toURL());
-        if (this.token != null) {
-            policyRequest.addHeader("Authorization", "Bearer " + this.token);
+        if (testContext.getToken() != null) {
+            policyRequest.addHeader("Authorization", "Bearer " + testContext.getToken());
         }
 
-        this.response = HTTP_CLIENT.newCall(policyRequest.build()).execute();
+        testContext.setResponse(HTTP_CLIENT.newCall(policyRequest.build()).execute());
     }
 
     @Then("Consumer should receive an access denied response")
     public void getAccessDeniedResponse() {
 
-        expectStatusCode(401, response, "Expected access denied response");
+        expectStatusCode(401, testContext.getResponse(), "Expected access denied response");
+    }
+
+    @Then("Consumer should receive a forbidden response")
+    public void getAccessForbiddenResponse() {
+
+        expectStatusCode(403, testContext.getResponse(), "Expected forbidden response");
+    }
+
+    @Then("Consumer should receive the resource information")
+    public void getAccessAllowedResponse() {
+
+        expectStatusCode(200, testContext.getResponse(), "Expected access allowed response");
     }
 
     private void expectStatusCode(int expectedStatusCode, Response response, String message) {

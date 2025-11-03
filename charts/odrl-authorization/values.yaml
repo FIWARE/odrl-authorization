@@ -126,7 +126,6 @@ opa: # config for open policy agent. Deployed as a PDP
   config:
     # -- address of the pap to get the policies from
     resourceUrl: http://odrl-pap:8080/bundles/service/v1
-    # TODO move to service or something similar
     # -- port to make opa available at
     port: 8181
     # -- pull delays for the policies bundle
