@@ -130,18 +130,12 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>download-local-storage</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>download-local-storage-it</id>
                         <phase>pre-integration-test</phase>
                         <goals>
                             <goal>wget</goal>
                         </goals>
+                        <inherited>false</inherited>
                     </execution>
                 </executions>
             </plugin>
@@ -159,20 +153,13 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>deploy-local-storage</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>run</goal>
-                            <goal>apply</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>deploy-local-storage-it</id>
                         <phase>pre-integration-test</phase>
                         <goals>
                             <goal>run</goal>
                             <goal>apply</goal>
                         </goals>
+                        <inherited>false</inherited>
                     </execution>
                 </executions>
             </plugin>
@@ -195,18 +182,12 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>test-env</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>it-env</id>
                         <phase>pre-integration-test</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <inherited>false</inherited>
                     </execution>
                 </executions>
             </plugin>
