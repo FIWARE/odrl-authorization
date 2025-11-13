@@ -152,7 +152,6 @@
                 <configuration>
                     <skip>${skipDeployInfra}</skip>
                     <portBindings>
-                        <!-- NGINX ingress controller http & https -->
                         <portBinding>30080:30080</portBinding>
                     </portBindings>
                     <failIfExists>false</failIfExists>
