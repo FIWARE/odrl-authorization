@@ -153,8 +153,7 @@
                     <skip>${skipDeployInfra}</skip>
                     <portBindings>
                         <!-- NGINX ingress controller http & https -->
-                        <portBinding>80:30080</portBinding>
-                        <portBinding>443:30443</portBinding>
+                        <portBinding>30080:30080</portBinding>
                     </portBindings>
                     <failIfExists>false</failIfExists>
                     <manifests>${project.build.directory}/tmp/local-path-storage.yaml</manifests>

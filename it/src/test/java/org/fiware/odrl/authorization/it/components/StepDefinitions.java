@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class StepDefinitions {
 
     private static final OkHttpClient HTTP_CLIENT = new OkHttpClient.Builder().build();
-    private static final URI PAP_URL = URI.create("http://pap.127.0.0.1.nip.io");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
 
     private TestContext testContext;
@@ -51,13 +50,13 @@ public class StepDefinitions {
 
     void cleanPolicies() throws IOException {
 
-        URI getPoliciesUri = PAP_URL.resolve("/policy");
+        URI getPoliciesUri = testContext.getPapPolicyUrl();
         Request policies = new Request.Builder().get().url(getPoliciesUri.toURL()).build();
         Response getPoliciesResp = HTTP_CLIENT.newCall(policies).execute();
         if (getPoliciesResp.code() < 400) {
             List<Policy> policyIds = OBJECT_MAPPER.readValue(getPoliciesResp.body().string(), new TypeReference<>() {});
             for(Policy policy : policyIds) {
-                URI deletePolicyUri = PAP_URL.resolve("/policy/" + policy.getId());
+                URI deletePolicyUri = testContext.getPapPolicyIdUrl(policy.getId());
                 Request deletePolicy = new Request.Builder().delete().url(deletePolicyUri.toURL()).build();
                 HTTP_CLIENT.newCall(deletePolicy).execute();
             }
@@ -67,7 +66,7 @@ public class StepDefinitions {
     @Given("Provider has protected a resource with ODRL policies")
     public void setUpPolicy() throws IOException, URISyntaxException, InterruptedException {
 
-        URI postPolicyUri = PAP_URL.resolve("/policy");
+        URI postPolicyUri = testContext.getPapPolicyUrl();
         Path policy = ResourceLoader.getResourcePath("allowPolicy.json");
         RequestBody body = RequestBody.create(policy.toFile(), okhttp3.MediaType.parse("application/json"));
         Request policyRequest = new Request.Builder()

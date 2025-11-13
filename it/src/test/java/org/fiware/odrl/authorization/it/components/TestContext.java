@@ -11,9 +11,10 @@ import java.net.URI;
  */
 public class TestContext {
 
-    private static final URI BASE_RESOURCE_URL = URI.create("http://apisix.127.0.0.1.nip.io");
+    private static final URI BASE_RESOURCE_URL = URI.create("http://apisix.127.0.0.1.nip.io:30080");
     private static final String VALID_RESOURCE_PATH = "/broker?type=AllowedOperation";
     private static final String INVALID_RESOURCE_PATH = "/broker?type=DenyOperation";
+    private static final URI PAP_URL = URI.create("http://pap.127.0.0.1.nip.io:30080");
 
     @Getter
     @Setter
@@ -36,5 +37,13 @@ public class TestContext {
         return allowed ?
                 BASE_RESOURCE_URL.resolve(VALID_RESOURCE_PATH) :
                 BASE_RESOURCE_URL.resolve(INVALID_RESOURCE_PATH);
+    }
+
+    public URI getPapPolicyUrl() {
+        return PAP_URL.resolve("/policy");
+    }
+
+    public URI getPapPolicyIdUrl(String policyId) {
+        return PAP_URL.resolve("/policy/" + policyId);
     }
 }
