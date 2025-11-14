@@ -8,6 +8,26 @@ This repository provides a description of the FIWARE Verifiable Credential Autho
 This project is part of [FIWARE](https://www.fiware.org/). For more information check the FIWARE Catalogue entry for
 [Security](https://github.com/FIWARE/catalogue/tree/master/security).
 
+| :books: [Documentation]()  |  :dart: [Roadmap](https://github.com/FIWARE/odrl-authorization/tree/master/doc/ROADMAP.md)|
+|---|---|
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Overview](#overview)
+- [Release Information](#release-information)
+- [Core components](#core-components)
+- [Deployment](#deployment)
+  - [Local Deployment](#local-deployment)
+  - [Deployment with Helm](#deployment-with-helm)
+- [Testing](#testing)
+- [How to contribute](#how-to-contribute)
+- [License](#license)
+
 # Overview
 
 FIWARE ODRL Authorization enables management of access authorization to services using an Attribute-Based Access Control (ABAC) model expressed with ODRL policies. In this architecture, ODRL is the policy language for expressing permissions, constraints and obligations; those ODRL policies are translated into executable Rego rules that the Open Policy Agent (OPA) evaluates at runtime.
@@ -23,7 +43,7 @@ The goal is to deliver a pluggable, standards-aligned authorization plane that:
 # Release Information
 FIWARE ODRL Authorization uses a continious integration flow, where every merge to the main-branch triggers a new release. Versioning follows Semantic Versioning 2.0.0, therefor only major changes will contain breaking changes. Important releases will be listed below, with additional information linked:
 
-# Core components (authorization-only)
+# Core components
 
 * [APISIX (Policy Enforcement Point — PEP)](https://apisix.apache.org/): intercepts incoming requests, performs credential/token validation and forwards the authorization query to Open Policy Agent (OPA). APISIX enforces the decision returned by the PDP.
 
