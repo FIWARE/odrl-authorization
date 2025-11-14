@@ -21,6 +21,7 @@ jobs:
       - name: Install Helm and Helmfile
         uses: helmfile/helmfile-action@v2.0.4
         with:
+          helm-version: v3.19.2
           helmfile-args: "--version"
 
       - name: Add repositories
@@ -34,6 +35,6 @@ jobs:
           sudo modprobe br_netfilter
 
       - name: Execute tests
-        id: test        
+        id: test
         run: |
           mvn clean integration-test -Ptest
