@@ -53,7 +53,7 @@ jobs:
 
       - id: match-label
         name: Match semver labels
-        uses: zwaldowski/match-label-action@v1
+        uses: zwaldowski/match-label-action@v5
         with:
           allowed: major, minor, patch
 
