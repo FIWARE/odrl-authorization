@@ -57,7 +57,7 @@ jobs:
         with:
           allowed: major, minor, patch
 
-      - uses: zwaldowski/semver-release-action@v2
+      - uses: zwaldowski/semver-release-action@v4
         name: Semver release
         with:
           dry_run: true
