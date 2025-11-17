@@ -103,7 +103,7 @@ jobs:
 
 
       # prepare yaml parser
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v6
       - name: Install yq
         run: |
           go install github.com/mikefarah/yq/v4@latest
