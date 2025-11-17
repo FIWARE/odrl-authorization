@@ -58,7 +58,7 @@ The FIWARE ODRL Authorization provides a minimal local deployment setup intended
 
 The requirements for the local deployment are:
 * [Maven](https://maven.apache.org/)
-* Java Development Kit (at least v21)
+* Java Development Kit (at least v17)
 * [Docker](https://www.docker.com/)
 * [Helm](https://helm.sh/)
 * [Helmfile](https://helmfile.readthedocs.io/en/latest/)
