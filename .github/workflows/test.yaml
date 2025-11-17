@@ -16,7 +16,7 @@ jobs:
           java-package: jdk
 
       - name: Install Kubectl
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
         id: install-kubectl
 
       - name: Install Helm and Helmfile
