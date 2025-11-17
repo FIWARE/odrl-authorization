@@ -71,7 +71,7 @@ jobs:
 
     if: always()
     steps:
-      - uses: technote-space/workflow-conclusion-action@v2
+      - uses: step-security/workflow-conclusion-action@v3
       - name: Checkout
         uses: actions/checkout@v1
 
