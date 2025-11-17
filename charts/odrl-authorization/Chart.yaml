@@ -1,6 +1,6 @@
 apiVersion: v2
 name: odrl-authorization
-description: Umbrella chart to deploy FIWARE Data Space Connector stack
+description: Umbrella chart to deploy FIWARE ODRL Authorization
 type: application
 version: 1.0.0
 dependencies:
