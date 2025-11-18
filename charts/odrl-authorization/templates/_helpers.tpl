@@ -43,3 +43,28 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
+
+{{- /*
+Helper to parse a URL and return host and port.
+*/ -}}
+{{- define "odrl-auth.parseURL" -}}
+{{- $raw := . -}}
+{{- $isService := not ( regexMatch "https?\\:\\/\\/" $raw ) }}
+{{- $isHttps := $raw | hasPrefix "https://" -}}
+{{- $noScheme := $raw | replace "https://" "" | replace "http://" "" -}}
+{{- $parts := splitList ":" $noScheme -}}
+{{- $host := $parts | first -}}
+{{- $port := 0 -}}
+{{- if eq (len $parts) 2 }}
+  {{- $port = $parts | last | int -}}
+{{- else }}
+  {{- if $isHttps }}
+    {{- $port = 443 -}}
+  {{- else }}
+    {{- $port = 80 -}}
+  {{- end -}}
+{{- end -}}
+host: {{ $host }}
+port: {{ $port }}
+isService: {{ $isService }}
+{{- end -}}

@@ -1,6 +1,4 @@
 repositories:
-- name: ingress-nginx
-  url: https://kubernetes.github.io/ingress-nginx
 - name: postgres-operator
   url: https://opensource.zalando.com/postgres-operator/charts/postgres-operator
 - name: vcverifier
@@ -9,17 +7,6 @@ repositories:
   url: https://www.mock-server.com
 
 releases:
-- name: ingress-nginx
-  namespace: ingress-nginx
-  chart: ingress-nginx/ingress-nginx
-  version: 4.13.1
-  values:
-    - controller:
-        service:
-          type: NodePort
-          nodePorts:
-            http: 30080
-            https: 30443
 - name: psql
   namespace: odrl-authorization
   chart: postgres-operator/postgres-operator
@@ -46,8 +33,9 @@ releases:
 - name: mockserver
   namespace: odrl-authorization
   chart: mockserver/mockserver
+  # force that ns exists
   needs:
-    - ingress-nginx/ingress-nginx
+    - psql
   hooks:
   - events: ["presync"]
     showlogs: true
@@ -79,33 +67,67 @@ releases:
   chart: ../charts/odrl-authorization
   version: 1.0.0
   needs:
-    - ingress-nginx/ingress-nginx
     - mockserver
     - psql
   values:
     - apisix:
-        dataPlane:
-          ingress:
-            enabled: true
-            hostname: apisix.127.0.0.1.nip.io
-            ingressClassName: nginx
-            extraHosts:
-              - name: apisix.127.0.0.1.nip.io
-                path: /
-          service:
-            type: ClusterIP
+        ingress-controller:
+          apisix:
+            adminService:
+              name: odrl-authorization-apisix-admin
+          config:
+            provider:
+              type: apisix-standalone
+        apisix:
+          deployment:
+            role: traditional
+            role_traditional:
+              config_provider: yaml
+        ingress:
+          enabled: true
+          hostname: apisix.127.0.0.1.nip.io
+          hosts:
+            - host: apisix.127.0.0.1.nip.io
+              paths: ["/"]
+        service:
+          http:
+            nodePort: 30080
         catchAllRoute:
-          upstream:
-            url: mockserver:8080
-          oidc:
-            discoveryEndpoint: http://mockserver:8080/.well-known/openid-configuration
+          enabled: false
+        routes:
+          - host: apisix.127.0.0.1.nip.io
+            uri: "/*"
+            upstream:
+              nodes:
+                mockserver:8080: 1
+              type: roundrobin
+            plugins:
+              openid-connect:
+                client_id: ""
+                client_secret: the-secret
+                bearer_only: true
+                use_jwks: true
+                discovery: http://mockserver:8080/.well-known/openid-configuration
+              opa:
+                host: http://localhost:8181
+                policy: policy/main
+                with_body: true
+          - host: pap.127.0.0.1.nip.io
+            uri: /*
+            upstream:
+              nodes:
+                odrl-pap:8080: 1
         etcd:
-          replicaCount: 1
+          enabled: false
         opa:
           config:
             policies:
               minDelay: 1
               maxDelay: 1
+          apisix:
+            adminService:
+              namespace: odrl-authorization
+              name: odrl-authorization-apisix-admin
       odrl-pap:
         database:
           url: jdbc:postgresql://postgres:5432/odrl
@@ -116,8 +138,6 @@ releases:
             key: password
         ingress:
           enabled: true
-          annotations:
-            kubernetes.io/ingress.class: nginx
           hosts:
           - host: pap.127.0.0.1.nip.io
             paths:

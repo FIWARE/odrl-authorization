@@ -1,0 +1,33 @@
+{{ $ingressClassName := default "apisix" (index .Values.apisix "ingress-controller").config.kubernetes.ingressClass }}
+{{- range $idx, $route := .Values.apisix.routes }}
+{{ $routeName := default (printf "%s-%d" ($route.host | replace "." "-") $idx) $route.name }}
+{{ $upstreamName := printf "%s-%s" $routeName "upstream" }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: {{ printf "%s-%s" $routeName "route" }}
+spec:
+  ingressClassName: {{ $ingressClassName }}
+  http:
+  - name: {{ printf "%s-%s" $routeName "route" }}
+    match:
+      hosts:
+        - {{ $route.host }}
+      paths:
+        - {{ $route.uri }}
+    {{- range $key, $value := $route.upstream.nodes }}
+    {{- $url := include "odrl-auth.parseURL" $key | fromYaml }}
+    backends:
+      - serviceName: {{ $url.host }}
+        servicePort: {{ $url.port }}
+        weight: {{ $value }}
+    {{- end }}
+    plugins:
+    {{- range $key, $value := $route.plugins }}
+      - name: {{ $key }}
+        enable: true
+        config:
+          {{- $value | toYaml | nindent 10 }}
+    {{- end }}
+---
+{{- end }}
