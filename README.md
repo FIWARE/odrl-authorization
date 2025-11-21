@@ -25,6 +25,12 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
     - [Local Deployment](#local-deployment)
     - [Deployment with Helm](#deployment-with-helm)
   - [Testing](#testing)
+  - [APISIX Deployment Modes](#apisix-deployment-modes)
+    - [Comparison Table](#comparison-table)
+    - [1. With ETCD and with the Ingress Controller](#1-with-etcd-and-with-the-ingress-controller)
+    - [2. With ETCD and without the Ingress Controller](#2-with-etcd-and-without-the-ingress-controller)
+    - [3. Without ETCD and with the Ingress Controller](#3-without-etcd-and-with-the-ingress-controller)
+    - [4. Without ETCD and without the Ingress Controller](#4-without-etcd-and-without-the-ingress-controller)
   - [How to contribute](#how-to-contribute)
   - [License](#license)
 
