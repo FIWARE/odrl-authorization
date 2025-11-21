@@ -1,113 +1,74 @@
 fullnameOverride: ''
 nameOverride: ''
-
-# -- configuration for apisix to be deployed as part of the connector, see https://github.com/bitnami/charts/tree/main/bitnami/apisix for all options
 apisix:
-  # -- should it be enabled? set to false if one outside the chart is used.
   enabled: true
-  image:
-    repository: bitnamilegacy/apisix
-  # -- configuration in regard to the apisix control plane
-  controlPlane:
-    # -- should it be enabled
+  # -- Enable the ingress controller pod to read Kubernetes Ingress resources.
+  ingress-controller:
     enabled: true
-    # -- resource preset to have sufficient memory
-    resourcesPreset: small
-  # -- configuration in regard to the apisix ingressController
-  ingressController:
-    # -- should it be enabled
-    enabled: false
-  # -- configuration in regard to the apisix etcd
-  etcd:
-    # -- should it be enabled
-    enabled: true
-    # -- persistence configuration of etcd
-    persistence:
-      # -- should it be enabled
-      enabled: false
-    image:
-      repository: bitnamilegacy/etcd
-  # -- configuration in regard to the apisix dataplane
-  dataPlane:
-    # -- resource preset to have sufficient memory
-    resourcesPreset: small
-    # -- configuration for extra configmaps to be deployed
-    extraConfig:
-      deployment:
-        # -- allows to configure apisix through a yaml file
-        role_data_plane:
-          config_provider: yaml
-      apisix:
-        extra_lua_path: /extra/apisix/plugins/?.lua
-    # -- extra volumes
-    # we need `routes` to declaratively configure the routes
-    # and the config for the opa sidecar
-    extraVolumes:
-      - name: routes
-        configMap:
-          name: apisix-routes
-      - name: opa-lua
-        configMap:
-          name: opa-lua
-      # OPA volumes
-      - name: tpp-policy
-        configMap:
-          name: tpp-policy
-      - name: opa-config
-        configMap:
-          name: opa-config
-    # -- extra volumes to be mounted
-    extraVolumeMounts:
-      - name: routes
-        mountPath: /usr/local/apisix/conf/apisix.yaml
-        subPath: apisix.yaml
-      - name: opa-lua
-        mountPath: /usr/local/apisix/apisix/plugins/opa/helper.lua
-        subPath: helper.lua
-      - name: opa-lua
-        mountPath: /usr/local/apisix/apisix/plugins/opa.lua
-        subPath: opa.lua
-    # -- sidecars to be deployed for apisix
-    sidecars:
-      # -- we want to deploy the open-policy-agent as a pdp
-      - name: open-policy-agent
-        image: openpolicyagent/opa:1.2.0
-        imagePullPolicy: IfNotPresent
-        ports:
-          - name: opa-http
-            containerPort: 8181
-            protocol: TCP
-        # opa should be started to listen at 8181 and get its config from the mounted config yaml
-        args:
-          - "run"
-          - "--ignore=.*"  # exclude hidden dirs created by Kubernetes
-          - "--server"
-          - "-l"
-          - "debug"
-          - "-c"
-          - "/config/opa.yaml"
-          - "--addr"
-          - "0.0.0.0:8181"
-          - "/tpp/tpp.rego"
-        volumeMounts:
-          - name: opa-config
-            mountPath: /config
-          - name: tpp-policy
-            mountPath: /tpp
-  # -- configuration in regard to the apisix dashboard
-  dashboard:
-    # -- should it be enabled
-    enabled: false
-    # -- resource preset to have sufficient memory
-    resourcesPreset: small
+    gatewayProxy:
+      createDefault: true
+    config:
+      kubernetes:
+        ingressClass: apisix
+  apisix:
+    deployment:
+      mode: traditional
+    admin:
+      enabled: true
+    customPlugins:
+      enabled: true
+      plugins:
+        - name: "opa-lua"
+          configMap:
+            name: opa-lua
+            mounts:
+              - key: opa.lua
+                path:  /opts/custom_plugins/opa.lua"
+              - key: helper.lua
+                path:  /opts/custom_plugins/helper.lua
 
+  extraContainers:
+    # -- we want to deploy the open-policy-agent as a pdp
+    - name: open-policy-agent
+      image: openpolicyagent/opa:1.2.0
+      imagePullPolicy: IfNotPresent
+      ports:
+        - name: opa-http
+          containerPort: 8181
+          protocol: TCP
+      # opa should be started to listen at 8181 and get its config from the mounted config yaml
+      args:
+        - "run"
+        - "--ignore=.*"  # exclude hidden dirs created by Kubernetes
+        - "--server"
+        - "-l"
+        - "debug"
+        - "-c"
+        - "/config/opa.yaml"
+        - "--addr"
+        - "0.0.0.0:8181"
+        - "/tpp/tpp.rego"
+      volumeMounts:
+        - name: opa-config
+          mountPath: /config
+        - name: tpp-policy
+          mountPath: /tpp
+  extraVolumes:
+    - name: tpp-policy
+      configMap:
+        name: tpp-policy
+    - name: opa-config
+      configMap:
+        name: opa-config
   # -- configuration of a catchAll-route(e.g. /*)
   catchAllRoute:
     # -- should it be enabled
     enabled: true
     # -- configuration to connect the upstream broker
     upstream:
-      url: http://my-broker:8000
+      url: http://my-broker:8080
+      # -- Domain or Service
+      type: Service
     # -- configuration to verify the jwt, coming from the verifier
     oidc:
       clientId: mySecuredService
@@ -118,9 +79,8 @@ apisix:
       with_body: true
   # -- configuration of routes for apisix
   routes: []
-  waitContainer:
-    image:
-      repository: bitnamilegacy/os-shell
+  etcd:
+    enabled: true
 
 opa: # config for open policy agent. Deployed as a PDP
   config:

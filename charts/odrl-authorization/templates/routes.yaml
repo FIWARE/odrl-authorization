@@ -1,0 +1,68 @@
+{{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
+{{- if $ingressConfig.enabled }}
+{{ $ingressClassName := default "apisix" $ingressConfig.config.kubernetes.ingressClass }}
+{{- range $idx, $route := .Values.apisix.routes }}
+{{ $routeName := default (printf "%s-%d" ($route.host | replace "." "-") $idx) $route.name }}
+{{ $upstreamName := printf "%s-%s" $routeName "upstream" }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: {{ printf "%s-%s" $routeName "route" }}
+spec:
+  ingressClassName: {{ $ingressClassName }}
+  http:
+  - name: {{ printf "%s-%s" $routeName "route" }}
+    match:
+      hosts:
+        - {{ $route.host }}
+      paths:
+        - {{ $route.uri }}
+    {{- range $key, $value := $route.upstream.nodes }}
+    {{- $url := include "odrl-auth.parseURL" $key | fromYaml }}
+    backends:
+      - serviceName: {{ $url.host }}
+        servicePort: {{ $url.port }}
+        weight: {{ $value }}
+    {{- end }}
+    plugins:
+    {{- range $key, $value := $route.plugins }}
+      - name: {{ $key }}
+        enable: true
+        config:
+          {{- $value | toYaml | nindent 10 }}
+    {{- end }}
+---
+{{- end }}
+{{- else }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix.yaml
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "odrl-auth.labels" . | nindent 4 }}
+data:
+  apisix.yaml: |-
+    routes:
+    {{- if .Values.apisix.catchAllRoute.enabled }}
+      - uri: /*
+        upstream:
+            nodes:
+                {{ .Values.apisix.catchAllRoute.upstream.url}}: 1
+            type: roundrobin
+        plugins:
+          openid-connect:
+            client_id: {{ .Values.apisix.catchAllRoute.oidc.clientId }}
+            client_secret: the-secret
+            bearer_only: true
+            use_jwks: true
+            discovery: {{ .Values.apisix.catchAllRoute.oidc.discoveryEndpoint }}
+          opa:
+            host: {{ required "Open Agent Policy host is required when catchAllRoute is enabled" .Values.apisix.catchAllRoute.opa.host}}
+            policy: policy/main
+    {{- end }}
+    {{- if .Values.apisix.routes }}
+      {{- .Values.apisix.routes | toYaml | nindent 6 }}
+    {{- end }}
+    #END
+{{- end }}

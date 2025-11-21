@@ -1,0 +1,53 @@
+{{- if .Values.apisix.catchAllRoute.enabled }}
+{{- $url := include "odrl-auth.parseURL" .Values.apisix.catchAllRoute.upstream.url | fromYaml -}}
+{{- if not $url.isService }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixUpstream
+metadata:
+  name: catchall-upstream
+spec:
+  ingressClassName: {{ (index .Values.apisix "ingress-controller").config.kubernetes.ingressClass }}
+  externalNodes:
+    - name: {{ $url.host }}
+      port: {{ $url.port }}
+      type: {{ default "Domain" .Values.apisix.catchAllRoute.upstream.type | title }}
+      weight: 1
+  type: roundrobin
+---
+{{- end }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: catchall-route
+spec:
+  ingressClassName: {{ (index .Values.apisix "ingress-controller").config.kubernetes.ingressClass }}
+  http:
+  - name: catchall
+    match:
+      paths:
+        - "/*"
+    {{- if $url.isService }}
+    backends:
+      - serviceName: {{ $url.host }}
+        servicePort: {{ $url.port }}
+        weight: 1
+    {{- else }}
+    upstreams:
+      - name: catchall-upstream
+        weight: 1
+    {{- end }}
+    plugins:
+      - name: openid-connect
+        enable: true
+        config:
+          client_id: "{{ .Values.apisix.catchAllRoute.oidc.clientId }}"
+          client_secret: the-secret
+          bearer_only: true
+          use_jwks: true
+          discovery: "{{ .Values.apisix.catchAllRoute.oidc.discoveryEndpoint }}"
+      - name: opa
+        enable: true
+        config:
+          host: "{{ required "Open Agent Policy host is required when catchAllRoute is enabled" .Values.apisix.catchAllRoute.opa.host }}"
+          policy: policy/main
+{{- end }}
