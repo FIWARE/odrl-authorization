@@ -118,6 +118,106 @@ The tests can be executed via:
 They will spin up the [Local Deployment](#local-deployment) and run
 the [test-scenarios](./it/src/test/resources/it/mvds_basic.feature) against it.
 
+
+## APISIX Deployment Modes
+
+APISIX can operate in four distinct deployment modes. Each mode determines how routes are stored, managed, and persisted, as well as which components are responsible for maintaining the routing configuration.
+
+### Comparison Table
+
+| Mode                                               | ETCD | Ingress Controller | Route Source                               | Persistence                    | Notes                                      |
+| -------------------------------------------------- | ---- | ------------------ | ------------------------------------------ | ------------------------------ | ------------------------------------------ |
+| **1. With ETCD and with Ingress Controller**       | ✔️   | ✔️                 | APISIX CRDs, Kubernetes Ingress, Admin API | ✔️ Persisted in ETCD           | Recommended for Kubernetes-native setups   |
+| **2. With ETCD and without Ingress Controller**    | ✔️   | ❌                  | Admin API only                             | ✔️ Persisted in ETCD           | Chart-defined routes are *not* initialized |
+| **3. Without ETCD and with Ingress Controller**    | ❌    | ✔️                 | APISIX CRDs, Kubernetes Ingress, Admin API | ❌ In-memory only               | Requires at least one route to start       |
+| **4. Without ETCD and without Ingress Controller** | ❌    | ❌                  | Static ConfigMap (`apisix.yaml`)           | ✔️ Persisted only in ConfigMap | **Under development**; installation may fail but upgrades will work                 |
+
+---
+
+### 1. With ETCD and with the Ingress Controller
+
+In this mode, APISIX persists all route definitions in ETCD. Routes may be defined via APISIX CRDs, standard Kubernetes Ingress resources, or the Admin API.
+Because the configuration is stored in ETCD, all routes—including those created through the Admin API—will **remain available after restarts**.
+
+```yaml
+apisix:
+  ingress-controller:
+    enabled: true
+  apisix:
+    deployment:
+      role: traditional
+      role_traditional:
+        config_provider: yaml
+  etcd:
+    enabled: true
+```
+
+---
+
+### 2. With ETCD and without the Ingress Controller
+
+In this configuration, ETCD persists the routes, but no Ingress Controller is available to manage them. As a result, routes can **only** be created or updated using the APISIX Admin API.
+Chart-defined routes are **not** initialized automatically.
+
+```yaml
+apisix:
+  ingress-controller:
+    enabled: false
+  apisix:
+    deployment:
+      role: traditional
+      role_traditional:
+        config_provider: yaml
+  etcd:
+    enabled: true
+```
+
+---
+
+### 3. Without ETCD and with the Ingress Controller
+
+When ETCD is disabled, APISIX loads all routes from APISIX CRDs and stores them in memory. The Ingress Controller continuously synchronizes APISIX with these CRDs.
+Although the Admin API can still modify routes, such changes **will not persist across restarts**.
+Kubernetes Ingress objects may also be used to define new routes.
+
+> [!WARNING]
+> APISIX requires at least one route to exist for the service to start correctly.
+
+```yaml
+apisix:
+  ingress-controller:
+    enabled: true
+  apisix:
+    deployment:
+      role: traditional
+      role_traditional:
+        config_provider: yaml
+  etcd:
+    enabled: false
+```
+
+---
+
+### 4. Without ETCD and without the Ingress Controller
+
+In this mode, routes are defined statically within the `apisix.yaml` ConfigMap. APISIX loads these routes at startup, and the configuration remains unchanged unless the ConfigMap or Helm values are manually updated.
+This mode is suitable for simple or fully static environments.
+
+> [!WARNING]
+> This mode is currently under development. Installation may fail, but upgrades will function correctly.
+
+```yaml
+apisix:
+  ingress-controller:
+    enabled: false
+  apisix:
+    deployment:
+      mode: standalone
+      role: data_plane
+  etcd:
+    enabled: false
+```
+
 ## How to contribute
 
 Please, check the doc [here](doc/CONTRIBUTING.md).
