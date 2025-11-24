@@ -229,7 +229,7 @@ apisix:
 Please, check the doc [here](doc/CONTRIBUTING.md).
 
 ## License
-odrl-authorization is licensed under [MIT License](LICENSE).
+odrl-authorization is licensed under [Apache v2.0](LICENSE).
 
 For the avoidance of doubt, the owners of this software
 wish to make a clarifying public statement as follows:
