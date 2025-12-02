@@ -17,7 +17,7 @@
 
 local core   = require("apisix.core")
 local http   = require("resty.http")
-local helper = require("apisix.plugins.opa.helper")
+local helper = require("apisix.plugins.helper")
 local type   = type
 local ipairs = ipairs
 
@@ -72,7 +72,6 @@ end
 
 function _M.access(conf, ctx)
     local body = helper.build_opa_input(conf, ctx, "http")
-
     local params = {
         method = "POST",
         body = core.json.encode(body),

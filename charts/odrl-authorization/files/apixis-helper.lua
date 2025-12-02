@@ -48,7 +48,7 @@ local function build_http_request(conf, ctx)
     }
 
     if conf.with_body then
-    http.body = core.json.decode(core.request.get_body())
+        http.body = core.json.decode(core.request.get_body())
     end
 
     return http
