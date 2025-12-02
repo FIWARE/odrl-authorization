@@ -21,12 +21,13 @@ apisix:
         - name: "opa-lua"
           configMap:
             name: opa-lua
+            # The plugin file must be located under the /{custom_path}/apisix/plugins directory.
+            # Reference: https://apisix.apache.org/docs/apisix/plugin-develop/#where-to-put-your-plugins
             mounts:
               - key: opa.lua
-                path:  /opts/custom_plugins/opa.lua"
+                path: /opts/custom_plugins/apisix/plugins/opa.lua
               - key: helper.lua
-                path:  /opts/custom_plugins/helper.lua
-
+                path:  /opts/custom_plugins/apisix/plugins/helper.lua
   extraContainers:
     # -- we want to deploy the open-policy-agent as a pdp
     - name: open-policy-agent
