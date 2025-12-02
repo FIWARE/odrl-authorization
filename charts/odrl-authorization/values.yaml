@@ -31,7 +31,7 @@ apisix:
   extraContainers:
     # -- we want to deploy the open-policy-agent as a pdp
     - name: open-policy-agent
-      image: openpolicyagent/opa:1.2.0
+      image: openpolicyagent/opa:1.11.0
       imagePullPolicy: IfNotPresent
       ports:
         - name: opa-http
