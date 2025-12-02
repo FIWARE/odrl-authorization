@@ -60,6 +60,7 @@ data:
           opa:
             host: {{ required "Open Agent Policy host is required when catchAllRoute is enabled" .Values.apisix.catchAllRoute.opa.host}}
             policy: policy/main
+            with_body: true
     {{- end }}
     {{- if .Values.apisix.routes }}
       {{- .Values.apisix.routes | toYaml | nindent 6 }}
