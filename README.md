@@ -226,6 +226,534 @@ apisix:
 
 <!-- BEGIN HELM DOCS -->
 
+
+## Values
+
+<table>
+	<thead>
+		<th>Key</th>
+		<th>Type</th>
+		<th>Default</th>
+		<th>Description</th>
+	</thead>
+	<tbody>
+		<tr>
+			<td>apisix.apisix.admin.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.plugins[0].configMap.mounts[0].key</td>
+			<td>string</td>
+			<td><pre lang="json">
+"opa.lua"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.plugins[0].configMap.mounts[0].path</td>
+			<td>string</td>
+			<td><pre lang="json">
+"/opts/custom_plugins/apisix/plugins/opa.lua"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.plugins[0].configMap.mounts[1].key</td>
+			<td>string</td>
+			<td><pre lang="json">
+"helper.lua"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.plugins[0].configMap.mounts[1].path</td>
+			<td>string</td>
+			<td><pre lang="json">
+"/opts/custom_plugins/apisix/plugins/helper.lua"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.plugins[0].configMap.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"opa-lua"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.customPlugins.plugins[0].name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"opa-lua"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.apisix.deployment.mode</td>
+			<td>string</td>
+			<td><pre lang="json">
+"traditional"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.catchAllRoute</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "enabled": true,
+  "oidc": {
+    "clientId": "mySecuredService",
+    "discoveryEndpoint": "http://verifier:3000/services/mySecuredService/.well-known/openid-configuration"
+  },
+  "opa": {
+    "host": "http://localhost:8181",
+    "policy": "policy/main",
+    "with_body": true
+  },
+  "upstream": {
+    "type": "Service",
+    "url": "http://my-broker:8080"
+  }
+}
+</pre>
+</td>
+			<td>configuration of a catchAll-route(e.g. /*)</td>
+		</tr>
+		<tr>
+			<td>apisix.catchAllRoute.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>enable catch all route</td>
+		</tr>
+		<tr>
+			<td>apisix.catchAllRoute.oidc</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "clientId": "mySecuredService",
+  "discoveryEndpoint": "http://verifier:3000/services/mySecuredService/.well-known/openid-configuration"
+}
+</pre>
+</td>
+			<td>configuration to verify the jwt, coming from the verifier</td>
+		</tr>
+		<tr>
+			<td>apisix.catchAllRoute.upstream</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "type": "Service",
+  "url": "http://my-broker:8080"
+}
+</pre>
+</td>
+			<td>configuration to connect the upstream broker</td>
+		</tr>
+		<tr>
+			<td>apisix.catchAllRoute.upstream.type</td>
+			<td>string</td>
+			<td><pre lang="json">
+"Service"
+</pre>
+</td>
+			<td>Domain or Service</td>
+		</tr>
+		<tr>
+			<td>apisix.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.etcd.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.extraContainers[0]</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "args": [
+    "run",
+    "--ignore=.*",
+    "--server",
+    "-l",
+    "debug",
+    "-c",
+    "/config/opa.yaml",
+    "--addr",
+    "0.0.0.0:8181",
+    "/tpp/tpp.rego"
+  ],
+  "image": "openpolicyagent/opa:1.11.0",
+  "imagePullPolicy": "IfNotPresent",
+  "name": "open-policy-agent",
+  "ports": [
+    {
+      "containerPort": 8181,
+      "name": "opa-http",
+      "protocol": "TCP"
+    }
+  ],
+  "volumeMounts": [
+    {
+      "mountPath": "/config",
+      "name": "opa-config"
+    },
+    {
+      "mountPath": "/tpp",
+      "name": "tpp-policy"
+    }
+  ]
+}
+</pre>
+</td>
+			<td>Deploy Open-Policy-Agent as sidecar</td>
+		</tr>
+		<tr>
+			<td>apisix.extraVolumes[0].configMap.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"tpp-policy"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.extraVolumes[0].name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"tpp-policy"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.extraVolumes[1].configMap.name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"opa-config"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.extraVolumes[1].name</td>
+			<td>string</td>
+			<td><pre lang="json">
+"opa-config"
+</pre>
+</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>apisix.ingress-controller.config.kubernetes.defaultIngressClass</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td>Set apisix ingress as default ingress in kubernetes</td>
+		</tr>
+		<tr>
+			<td>apisix.ingress-controller.config.kubernetes.ingressClass</td>
+			<td>string</td>
+			<td><pre lang="json">
+"apisix"
+</pre>
+</td>
+			<td>Name of the ingress class created in kubernetes</td>
+		</tr>
+		<tr>
+			<td>apisix.ingress-controller.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Enable the ingress controller pod to read Kubernetes Ingress resources. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix-ingress-controller) for more details</td>
+		</tr>
+		<tr>
+			<td>apisix.ingress-controller.gatewayProxy.createDefault</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Controls whether to create a default GatewayProxy custom resource.</td>
+		</tr>
+		<tr>
+			<td>apisix.routes</td>
+			<td>dict</td>
+			<td><pre lang="json">
+[]
+</pre>
+</td>
+			<td>Configuration of routes for apisix
+
+```yaml
+uri: /*
+  host: host-name-test
+  type: Service
+  namespace: super-ns # release namespace by default
+  upstream:
+    nodes:
+      data-service-test:9090: 1
+    type: roundrobin
+  plugins:
+    openid-connect:
+      bearer_only: true
+      use_jwks: true
+      client_id: data-service
+      client_secret: unused
+      discovery: https://verifier:8080/services/data-service/.well-known/openid-configuration
+    opa:
+      host: "http://localhost:8181"
+      policy: policy/main
+      with_body: true
+```
+</td>
+		</tr>
+		<tr>
+			<td>fullnameOverride</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td>String to fully override common.names.fullname</td>
+		</tr>
+		<tr>
+			<td>nameOverride</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td>String to fully override common.names.namespace</td>
+		</tr>
+		<tr>
+			<td>odrl-pap.database</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "existingSecret": {
+    "enabled": true,
+    "key": "postgres-admin-password",
+    "name": "database-secret"
+  },
+  "url": "jdbc:postgresql://postgresql:5432/pap",
+  "username": "postgres"
+}
+</pre>
+</td>
+			<td>connection to the database</td>
+		</tr>
+		<tr>
+			<td>odrl-pap.database.existingSecret</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "enabled": true,
+  "key": "postgres-admin-password",
+  "name": "database-secret"
+}
+</pre>
+</td>
+			<td>secret to take the password from</td>
+		</tr>
+		<tr>
+			<td>odrl-pap.database.url</td>
+			<td>string</td>
+			<td><pre lang="json">
+"jdbc:postgresql://postgresql:5432/pap"
+</pre>
+</td>
+			<td>url to connect the db at</td>
+		</tr>
+		<tr>
+			<td>odrl-pap.database.username</td>
+			<td>string</td>
+			<td><pre lang="json">
+"postgres"
+</pre>
+</td>
+			<td>username to access the db</td>
+		</tr>
+		<tr>
+			<td>odrl-pap.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+true
+</pre>
+</td>
+			<td>Enable the deployment of odr-pap. OPA requires it; if disabled, you will need to deploy it manually.</td>
+		</tr>
+		<tr>
+			<td>odrl-pap.fullnameOverride</td>
+			<td>string</td>
+			<td><pre lang="json">
+"odrl-pap"
+</pre>
+</td>
+			<td>allows to set a fixed name for the services</td>
+		</tr>
+		<tr>
+			<td>opa.config</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "data": {
+    "maxDelay": 15,
+    "minDelay": 1
+  },
+  "methods": {
+    "maxDelay": 3,
+    "minDelay": 1
+  },
+  "policies": {
+    "maxDelay": 4,
+    "minDelay": 2
+  },
+  "port": 8181,
+  "resourceUrl": "http://odrl-pap:8080/bundles/service/v1"
+}
+</pre>
+</td>
+			<td>config for open policy agent. Deployed as a PDP</td>
+		</tr>
+		<tr>
+			<td>opa.config.data</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "maxDelay": 15,
+  "minDelay": 1
+}
+</pre>
+</td>
+			<td>pull delays for the data bundle</td>
+		</tr>
+		<tr>
+			<td>opa.config.methods</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "maxDelay": 3,
+  "minDelay": 1
+}
+</pre>
+</td>
+			<td>pull delays for the methods bundle</td>
+		</tr>
+		<tr>
+			<td>opa.config.policies</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "maxDelay": 4,
+  "minDelay": 2
+}
+</pre>
+</td>
+			<td>pull delays for the policies bundle (in seconds)</td>
+		</tr>
+		<tr>
+			<td>opa.config.port</td>
+			<td>int</td>
+			<td><pre lang="json">
+8181
+</pre>
+</td>
+			<td>port to make opa available at</td>
+		</tr>
+		<tr>
+			<td>opa.config.resourceUrl</td>
+			<td>string</td>
+			<td><pre lang="json">
+"http://odrl-pap:8080/bundles/service/v1"
+</pre>
+</td>
+			<td>address of the odrl-pap to get the policies from</td>
+		</tr>
+		<tr>
+			<td>tpp</td>
+			<td>object</td>
+			<td><pre lang="json">
+{
+  "enabled": false,
+  "transfers": {
+    "host": "",
+    "path": "/transfers"
+  }
+}
+</pre>
+</td>
+			<td>integration of checks for the transfer process protocol</td>
+		</tr>
+		<tr>
+			<td>tpp.enabled</td>
+			<td>bool</td>
+			<td><pre lang="json">
+false
+</pre>
+</td>
+			<td>should checking for a running transfer process be enabled</td>
+		</tr>
+		<tr>
+			<td>tpp.transfers.host</td>
+			<td>string</td>
+			<td><pre lang="json">
+""
+</pre>
+</td>
+			<td>host of the endpoint to check the process id, e.g. rainbow</td>
+		</tr>
+		<tr>
+			<td>tpp.transfers.path</td>
+			<td>string</td>
+			<td><pre lang="json">
+"/transfers"
+</pre>
+</td>
+			<td>path to check the id at</td>
+		</tr>
+	</tbody>
+</table>
 <!-- END HELM DOCS -->
 
 ## How to contribute
