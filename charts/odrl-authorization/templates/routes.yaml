@@ -8,6 +8,7 @@ apiVersion: apisix.apache.org/v2
 kind: ApisixRoute
 metadata:
   name: {{ printf "%s-%s" $routeName "route" }}
+  namespace: {{ default $.Release.Namespace $route.namespace | quote }}
 spec:
   ingressClassName: {{ $ingressClassName }}
   http:
