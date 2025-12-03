@@ -78,7 +78,26 @@ apisix:
       host: 'http://localhost:8181'
       policy: policy/main
       with_body: true
-  # -- configuration of routes for apisix
+  # -- configuration of routes for apisix. E.g.
+  # uri: /*
+  #   host: host-name-test
+  #   type: Service
+  #   namespace: super-ns # release namespace by default
+  #   upstream:
+  #     nodes:
+  #       data-service-test:9090: 1
+  #     type: roundrobin
+  #   plugins:
+  #     openid-connect:
+  #       bearer_only: true
+  #       use_jwks: true
+  #       client_id: data-service
+  #       client_secret: unused
+  #       discovery: https://verifier:8080/services/data-service/.well-known/openid-configuration
+  #     opa:
+  #       host: "http://localhost:8181"
+  #       policy: policy/main
+  #       with_body: true
   routes: []
   etcd:
     enabled: true
