@@ -31,6 +31,7 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
     - [2. With ETCD and without the Ingress Controller](#2-with-etcd-and-without-the-ingress-controller)
     - [3. Without ETCD and with the Ingress Controller](#3-without-etcd-and-with-the-ingress-controller)
     - [4. Without ETCD and without the Ingress Controller](#4-without-etcd-and-without-the-ingress-controller)
+  - [Values](#values)
   - [How to contribute](#how-to-contribute)
   - [License](#license)
 
