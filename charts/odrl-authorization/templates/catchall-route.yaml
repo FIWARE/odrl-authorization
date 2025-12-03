@@ -1,4 +1,5 @@
-{{- if .Values.apisix.catchAllRoute.enabled }}
+{{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
+{{- if and .Values.apisix.catchAllRoute.enabled $ingressConfig.enabled }}
 {{- $url := include "odrl-auth.parseURL" .Values.apisix.catchAllRoute.upstream.url | fromYaml -}}
 {{- if not $url.isService }}
 apiVersion: apisix.apache.org/v2
