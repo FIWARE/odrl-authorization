@@ -84,7 +84,10 @@ apisix:
       host: 'http://localhost:8181'
       policy: policy/main
       with_body: true
-  # -- configuration of routes for apisix. E.g.
+  # -- (dict) Configuration of routes for apisix
+  # @raw
+  #
+  # ```yaml
   # uri: /*
   #   host: host-name-test
   #   type: Service
@@ -104,6 +107,8 @@ apisix:
   #       host: "http://localhost:8181"
   #       policy: policy/main
   #       with_body: true
+  # ```
+  #
   routes: []
   etcd:
     enabled: true

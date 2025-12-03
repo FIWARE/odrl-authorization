@@ -95,17 +95,17 @@ jobs:
       name: "Create Git Release"
       needs: ["generate-version", "deploy"]
       runs-on: ubuntu-latest
-
       steps:
-
         - uses: actions/checkout@v5
-        - name: Generate Readme
+        - name: Install helm-docs
           run: |
-            .github/scripts/add-to-readme.sh
-        - name: Commit readme
+            wget -O /tmp/helm-docs.tar.gz https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
+            tar -xf /tmp/helm-docs.tar.gz  -C /tmp
+        - name: Add chart properties to README.md
           continue-on-error: true
           run: |
-            cd current-branch
+            export PATH=$PATH:/tmp
+            .github/scripts/add-to-readme.sh
             git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git config --local user.name "github-actions[bot]"
             git status
