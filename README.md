@@ -224,6 +224,10 @@ apisix:
     enabled: false
 ```
 
+<!-- BEGIN HELM DOCS -->
+
+<!-- END HELM DOCS -->
+
 ## How to contribute
 
 Please, check the doc [here](doc/CONTRIBUTING.md).

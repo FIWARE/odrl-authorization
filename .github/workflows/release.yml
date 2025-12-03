@@ -99,7 +99,17 @@ jobs:
       steps:
 
         - uses: actions/checkout@v5
-
+        - name: Generate Readme
+          run: |
+            .github/scripts/add-to-readme.sh
+        - name: Commit readme
+          continue-on-error: true
+          run: |
+            cd current-branch
+            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git status
+            git diff --quiet README.md || (git add README.md && git commit -m "Update chart properties")
         - name: Generate Table of contents
           uses: technote-space/toc-generator@v4
           with:
