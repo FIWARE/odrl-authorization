@@ -1,15 +1,22 @@
+# -- String to fully override common.names.fullname
 fullnameOverride: ''
+# -- String to fully override common.names.namespace
 nameOverride: ''
 apisix:
+  #-- Enable apisix deployment. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix) for more details
   enabled: true
-  # -- Enable the ingress controller pod to read Kubernetes Ingress resources.
   ingress-controller:
+    # -- Enable the ingress controller pod to read Kubernetes Ingress resources. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix-ingress-controller) for more details
     enabled: true
     gatewayProxy:
+      # -- Controls whether to create a default GatewayProxy custom resource.
       createDefault: true
     config:
       kubernetes:
+        # -- Name of the ingress class created in kubernetes
         ingressClass: apisix
+        # -- Set apisix ingress as default ingress in kubernetes
+        defaultIngressClass: false
   apisix:
     deployment:
       mode: traditional
@@ -29,7 +36,7 @@ apisix:
               - key: helper.lua
                 path:  /opts/custom_plugins/apisix/plugins/helper.lua
   extraContainers:
-    # -- we want to deploy the open-policy-agent as a pdp
+    # -- Deploy Open-Policy-Agent as sidecar
     - name: open-policy-agent
       image: openpolicyagent/opa:1.11.0
       imagePullPolicy: IfNotPresent
@@ -37,7 +44,6 @@ apisix:
         - name: opa-http
           containerPort: 8181
           protocol: TCP
-      # opa should be started to listen at 8181 and get its config from the mounted config yaml
       args:
         - "run"
         - "--ignore=.*"  # exclude hidden dirs created by Kubernetes
@@ -63,7 +69,7 @@ apisix:
         name: opa-config
   # -- configuration of a catchAll-route(e.g. /*)
   catchAllRoute:
-    # -- should it be enabled
+    # -- enable catch all route
     enabled: true
     # -- configuration to connect the upstream broker
     upstream:
@@ -102,13 +108,14 @@ apisix:
   etcd:
     enabled: true
 
-opa: # config for open policy agent. Deployed as a PDP
+opa:
+  # -- config for open policy agent. Deployed as a PDP
   config:
-    # -- address of the pap to get the policies from
+    # -- address of the odrl-pap to get the policies from
     resourceUrl: http://odrl-pap:8080/bundles/service/v1
     # -- port to make opa available at
     port: 8181
-    # -- pull delays for the policies bundle
+    # -- pull delays for the policies bundle (in seconds)
     policies:
       minDelay: 2
       maxDelay: 4
@@ -131,6 +138,7 @@ tpp:
     path: /transfers
 
 odrl-pap:
+  # -- Enable the deployment of odr-pap. OPA requires it; if disabled, you will need to deploy it manually.
   enabled: true
   # -- allows to set a fixed name for the services
   fullnameOverride: odrl-pap
