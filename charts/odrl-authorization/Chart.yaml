@@ -2,7 +2,7 @@ apiVersion: v2
 name: odrl-authorization
 description: Umbrella chart to deploy FIWARE ODRL Authorization
 type: application
-version: 1.0.3
+version: 1.0.4
 dependencies:
   # authorization
   - name: odrl-pap
