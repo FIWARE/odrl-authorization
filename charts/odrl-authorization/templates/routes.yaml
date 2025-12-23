@@ -25,12 +25,14 @@ spec:
         servicePort: {{ $url.port }}
         weight: {{ $value }}
     {{- end }}
+    {{- if $route.plugins }}
     plugins:
     {{- range $key, $value := $route.plugins }}
       - name: {{ $key }}
         enable: true
         config:
           {{- $value | toYaml | nindent 10 }}
+    {{- end }}
     {{- end }}
 ---
 {{- end }}
