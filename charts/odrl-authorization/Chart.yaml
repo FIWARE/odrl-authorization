@@ -7,7 +7,7 @@ dependencies:
   # authorization
   - name: odrl-pap
     condition: odrl-pap.enabled
-    version: 2.3.0
+    version: 2.3.2
     repository: https://fiware.github.io/helm-charts
   - name: apisix
     condition: apisix.enabled
