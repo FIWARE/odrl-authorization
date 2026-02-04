@@ -54,7 +54,7 @@ jobs:
 
         - name: Set version output
           id: out
-          run: echo "::set-output name=version::$(echo ${VERSION})"
+          run: echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
     deploy:
       name: "Release charts"

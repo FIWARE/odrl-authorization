@@ -64,21 +64,17 @@ jobs:
 
   comment:
     runs-on: ubuntu-latest
-    needs:
-      - "check-labels"
-
-    if: always()
+    needs: 
+      - check-labels
+    if: always() && needs.check-labels.result == 'failure'
     steps:
-      - uses: step-security/workflow-conclusion-action@v3
       - name: Checkout
-        uses: actions/checkout@v1
-
+        uses: actions/checkout@v5
       - name: Comment PR
-        if: env.WORKFLOW_CONCLUSION == 'failure'
-        uses: thollander/actions-comment-pull-request@1.0.2
+        uses: thollander/actions-comment-pull-request@v3.0.0
         with:
           message: "Please apply one of the following labels to the PR: 'patch', 'minor', 'major'."
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   prepare-release:
     needs: ["check-labels", "comment"]
