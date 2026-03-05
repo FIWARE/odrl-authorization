@@ -81,37 +81,31 @@ releases:
               type: apisix-standalone
         apisix:
           deployment:
+            role: "traditional"
+            role_traditional:
+              config_provider: "yaml"
             standalone:
-              config: |
-                routes:
-                  - host: apisix.127.0.0.1.nip.io
-                    uri: "/*"
-                    upstream:
-                      nodes:
-                        mockserver:8080: 1
-                      type: roundrobin
-                    plugins:
-                      openid-connect:
-                        client_id: ""
-                        client_secret: the-secret
-                        bearer_only: true
-                        use_jwks: true
-                        discovery: http://mockserver:8080/.well-known/openid-configuration
-                      opa:
-                        host: http://localhost:8181
-                        policy: policy/main
-                        with_body: true
-                  - host: pap.127.0.0.1.nip.io
-                    uri: /*
-                    upstream:
-                      nodes:
-                        odrl-pap:8080: 1
+              existingConfigMap: ""
+        routes:
+          - host: apisix.127.0.0.1.nip.io
+            uri: "/*"
+            upstream:
+              nodes:
+                mockserver:8080: 1
+              type: roundrobin
+            plugins:
+              openid-connect:
+                client_id: ""
+                client_secret: the-secret
+                bearer_only: true
+                use_jwks: true
+                discovery: http://mockserver:8080/.well-known/openid-configuration
+              opa:
+                host: http://localhost:8181
+                policy: policy/main
+                with_body: true
         ingress:
-          enabled: true
-          hostname: apisix.127.0.0.1.nip.io
-          hosts:
-            - host: apisix.127.0.0.1.nip.io
-              paths: ["/"]
+          enabled: false
         service:
           http:
             nodePort: 30080
@@ -138,6 +132,8 @@ releases:
             key: password
         ingress:
           enabled: true
+          annotations:
+            kubernetes.io/ingress.class: "apisix"
           hosts:
           - host: pap.127.0.0.1.nip.io
             paths:
