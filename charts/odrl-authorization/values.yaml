@@ -19,7 +19,31 @@ apisix:
         defaultIngressClass: false
   apisix:
     deployment:
-      mode: traditional
+      mode: standalone
+      # -- Deployment role
+      # Optional: traditional, data_plane, control_plane
+      #
+      # ref: https://apisix.apache.org/docs/apisix/deployment-modes/
+      role: "data_plane"
+      role_traditional:
+        # enum: etcd, yaml
+        config_provider: "yaml"
+      # -- Standalone rules configuration
+      #
+      # ref: https://apisix.apache.org/docs/apisix/deployment-modes/#standalone
+      standalone:
+        # -- Rules which are set to the default apisix.yaml configmap.
+        # If apisix.deployment.standalone.existingConfigMap is empty, these are used.
+        config: |
+          routes:
+          - uri: /hi
+            upstream:
+              nodes:
+                "127.0.0.1:1980": 1
+              type: roundrobin
+        # -- Specifies the name of the ConfigMap that contains the rule configurations.
+        # The configuration must be set to the key named `apisix.yaml` in the configmap.
+        existingConfigMap: ""
     admin:
       enabled: true
     customPlugins:
@@ -84,32 +108,6 @@ apisix:
       host: 'http://localhost:8181'
       policy: policy/main
       with_body: true
-  # -- (dict) Configuration of routes for apisix
-  # @raw
-  #
-  # ```yaml
-  # uri: /*
-  #   host: host-name-test
-  #   type: Service
-  #   namespace: super-ns # release namespace by default
-  #   upstream:
-  #     nodes:
-  #       data-service-test:9090: 1
-  #     type: roundrobin
-  #   plugins:
-  #     openid-connect:
-  #       bearer_only: true
-  #       use_jwks: true
-  #       client_id: data-service
-  #       client_secret: unused
-  #       discovery: https://verifier:8080/services/data-service/.well-known/openid-configuration
-  #     opa:
-  #       host: "http://localhost:8181"
-  #       policy: policy/main
-  #       with_body: true
-  # ```
-  #
-  routes: []
   etcd:
     enabled: true
 
