@@ -2,7 +2,7 @@ apiVersion: v2
 name: odrl-authorization
 description: Umbrella chart to deploy FIWARE ODRL Authorization
 type: application
-version: 1.0.5
+version: 2.0.0
 dependencies:
   # authorization
   - name: odrl-pap
@@ -11,5 +11,5 @@ dependencies:
     repository: https://fiware.github.io/helm-charts
   - name: apisix
     condition: apisix.enabled
-    version: 2.12.3
+    version: 2.13.0
     repository: https://apache.github.io/apisix-helm-chart

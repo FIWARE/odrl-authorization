@@ -72,6 +72,7 @@ releases:
   values:
     - apisix:
         ingress-controller:
+          enabled: true
           apisix:
             adminService:
               name: odrl-authorization-apisix-admin
@@ -80,9 +81,31 @@ releases:
               type: apisix-standalone
         apisix:
           deployment:
-            role: traditional
-            role_traditional:
-              config_provider: yaml
+            standalone:
+              config: |
+                routes:
+                  - host: apisix.127.0.0.1.nip.io
+                    uri: "/*"
+                    upstream:
+                      nodes:
+                        mockserver:8080: 1
+                      type: roundrobin
+                    plugins:
+                      openid-connect:
+                        client_id: ""
+                        client_secret: the-secret
+                        bearer_only: true
+                        use_jwks: true
+                        discovery: http://mockserver:8080/.well-known/openid-configuration
+                      opa:
+                        host: http://localhost:8181
+                        policy: policy/main
+                        with_body: true
+                  - host: pap.127.0.0.1.nip.io
+                    uri: /*
+                    upstream:
+                      nodes:
+                        odrl-pap:8080: 1
         ingress:
           enabled: true
           hostname: apisix.127.0.0.1.nip.io
@@ -94,29 +117,6 @@ releases:
             nodePort: 30080
         catchAllRoute:
           enabled: false
-        routes:
-          - host: apisix.127.0.0.1.nip.io
-            uri: "/*"
-            upstream:
-              nodes:
-                mockserver:8080: 1
-              type: roundrobin
-            plugins:
-              openid-connect:
-                client_id: ""
-                client_secret: the-secret
-                bearer_only: true
-                use_jwks: true
-                discovery: http://mockserver:8080/.well-known/openid-configuration
-              opa:
-                host: http://localhost:8181
-                policy: policy/main
-                with_body: true
-          - host: pap.127.0.0.1.nip.io
-            uri: /*
-            upstream:
-              nodes:
-                odrl-pap:8080: 1
         etcd:
           enabled: false
         opa:
