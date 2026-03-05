@@ -18,18 +18,17 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [odrl-authorization](#odrl-authorization)
 - [Overview](#overview)
 - [Release Information](#release-information)
 - [Core components](#core-components)
-	- [Deployment](#deployment)
-		- [Local Deployment](#local-deployment)
-		- [Deployment with Helm](#deployment-with-helm)
-	- [Testing](#testing)
-	- [APISIX Deployment Modes](#apisix-deployment-modes)
-	- [Values](#values)
-	- [How to contribute](#how-to-contribute)
-	- [License](#license)
+  - [Deployment](#deployment)
+    - [Local Deployment](#local-deployment)
+    - [Deployment with Helm](#deployment-with-helm)
+  - [Testing](#testing)
+  - [APISIX Deployment Modes](#apisix-deployment-modes)
+  - [Values](#values)
+  - [How to contribute](#how-to-contribute)
+  - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
