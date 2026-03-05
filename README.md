@@ -18,23 +18,22 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [odrl-authorization](#odrl-authorization)
 - [Overview](#overview)
 - [Release Information](#release-information)
 - [Core components](#core-components)
-	- [Deployment](#deployment)
-		- [Local Deployment](#local-deployment)
-		- [Deployment with Helm](#deployment-with-helm)
-	- [Testing](#testing)
-	- [APISIX Deployment Modes](#apisix-deployment-modes)
-		- [Comparison Table](#comparison-table)
-		- [1. With ETCD and with the Ingress Controller](#1-with-etcd-and-with-the-ingress-controller)
-		- [2. With ETCD and without the Ingress Controller](#2-with-etcd-and-without-the-ingress-controller)
-		- [3. Without ETCD and with the Ingress Controller](#3-without-etcd-and-with-the-ingress-controller)
-		- [4. Without ETCD and without the Ingress Controller](#4-without-etcd-and-without-the-ingress-controller)
-	- [Values](#values)
-	- [How to contribute](#how-to-contribute)
-	- [License](#license)
+  - [Deployment](#deployment)
+    - [Local Deployment](#local-deployment)
+    - [Deployment with Helm](#deployment-with-helm)
+  - [Testing](#testing)
+  - [APISIX Deployment Modes](#apisix-deployment-modes)
+    - [Comparison Table](#comparison-table)
+    - [1. With ETCD and with the Ingress Controller](#1-with-etcd-and-with-the-ingress-controller)
+    - [2. With ETCD and without the Ingress Controller](#2-with-etcd-and-without-the-ingress-controller)
+    - [3. Without ETCD and with the Ingress Controller](#3-without-etcd-and-with-the-ingress-controller)
+    - [4. Without ETCD and without the Ingress Controller](#4-without-etcd-and-without-the-ingress-controller)
+  - [Values](#values)
+  - [How to contribute](#how-to-contribute)
+  - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
