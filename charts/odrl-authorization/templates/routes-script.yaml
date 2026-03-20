@@ -1,0 +1,51 @@
+{{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
+{{- $adminUrl := printf "http://%s:%s" (include "odrl-auth.apisix-admin-service" .) (toString (default 9180 .Values.apisix.apisix.admin.servicePort)) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-routes
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "odrl-auth.labels" . | nindent 4 }}
+data:
+  create-routes.sh: |-
+    set -e
+    {{- if .Values.apisix.catchAllRoute.enabled }}
+    curl -k -f -X POST {{ $adminUrl }}/apisix/admin/routes \
+      --header 'Accept: */*' \
+      --header "X-API-KEY: ${API_KEY}" \
+      --header 'Content-Type: application/json' \
+      --data-raw '{
+        "uri": "/*",
+        "upstream": {
+          "type": "roundrobin",
+          "nodes": {
+            {{ .Values.apisix.catchAllRoute.upstream.url | quote }}: 1
+          }
+        },
+        "plugins": {
+          "openid-connect": {
+            "client_id": {{ .Values.apisix.catchAllRoute.oidc.clientId | quote }},
+            "client_secret": "the-secret",
+            "bearer_only": true,
+            "use_jwks": true,
+            "discovery": {{ .Values.apisix.catchAllRoute.oidc.discoveryEndpoint | quote }}
+          },
+          "opa": {
+            "host": {{ required "Open Agent Policy host is required when catchAllRoute is enabled" .Values.apisix.catchAllRoute.opa.host}},
+            "policy": "policy/main"
+          }
+        }
+      }'
+    {{- end }}
+    {{- if .Values.apisix.routes }}
+
+    {{- range $index, $route := .Values.apisix.routes }}
+    curl -k -f -X POST {{ $adminUrl }}/apisix/admin/routes \
+      --header 'Accept: */*' \
+      --header "X-API-KEY: ${API_KEY}" \
+      --header 'Content-Type: application/json' \
+      --data-raw '{{ $route | toJson }}'
+    {{- end }}
+    {{- end }}
+{{- end }}

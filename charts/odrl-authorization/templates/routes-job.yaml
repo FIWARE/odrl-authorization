@@ -1,0 +1,38 @@
+{{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apisix-routes-job
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{- include "odrl-auth.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+      containers:
+        - name: register-routes
+          image: quay.io/curl/curl:8.1.2
+          command: [ "/bin/sh", "-c", "/bin/create-routes.sh" ]
+          env:
+            - name: API_KEY
+              {{- if .Values.apisix.apisix.admin.credentials.secretName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.apisix.apisix.admin.credentials.secretName }}
+                  key: {{ .Values.apisix.apisix.admin.credentials.secretAdminKey | default "admin" }}
+              {{- else }}
+              value: {{ required "Either apisix.apisix.admin.credentials.admin or apisix.apisix.admin.credentials.secretName must be set" .Values.apisix.apisix.admin.credentials.admin | quote }}
+              {{- end }}
+          volumeMounts:
+            - name: apisix-routes
+              mountPath: /bin/create-routes.sh
+              subPath: create-routes.sh
+      volumes:
+        - name: apisix-routes
+          configMap:
+            name: apisix-routes
+            defaultMode: 0755
+
+      restartPolicy: Never
+  backoffLimit: 10
+{{- end }}
