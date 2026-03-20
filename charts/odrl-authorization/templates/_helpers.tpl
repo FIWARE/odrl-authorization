@@ -44,6 +44,23 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
+{{/*
+Compute the APISIX admin service name.
+Mirrors the subchart's "apisix.fullname" logic using the dependency name "apisix".
+*/}}
+{{- define "odrl-auth.apisix-admin-service" -}}
+{{- if .Values.apisix.fullnameOverride -}}
+  {{- printf "%s-admin" (.Values.apisix.fullnameOverride | trunc 63 | trimSuffix "-") -}}
+{{- else -}}
+  {{- $name := default "apisix" .Values.apisix.nameOverride -}}
+  {{- if contains $name .Release.Name -}}
+    {{- printf "%s-admin" (.Release.Name | trunc 63 | trimSuffix "-") -}}
+  {{- else -}}
+    {{- printf "%s-%s-admin" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- /*
 Helper to parse a URL and return host and port.
 */ -}}

@@ -6,6 +6,7 @@ apiVersion: apisix.apache.org/v2
 kind: ApisixUpstream
 metadata:
   name: catchall-upstream
+  namespace: {{ $.Release.Namespace | quote }}
 spec:
   ingressClassName: {{ (index .Values.apisix "ingress-controller").config.kubernetes.ingressClass }}
   externalNodes:
@@ -20,6 +21,7 @@ apiVersion: apisix.apache.org/v2
 kind: ApisixRoute
 metadata:
   name: catchall-route
+  namespace: {{ $.Release.Namespace | quote }}
 spec:
   ingressClassName: {{ (index .Values.apisix "ingress-controller").config.kubernetes.ingressClass }}
   http:
