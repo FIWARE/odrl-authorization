@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 {{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
 {{- if and .Values.apisix.catchAllRoute.enabled $ingressConfig.enabled }}
 {{- $url := include "odrl-auth.parseURL" .Values.apisix.catchAllRoute.upstream.url | fromYaml -}}
@@ -54,4 +55,5 @@ spec:
           host: "{{ required "Open Agent Policy host is required when catchAllRoute is enabled" .Values.apisix.catchAllRoute.opa.host }}"
           policy: policy/main
           with_body: true
+{{- end }}
 {{- end }}
