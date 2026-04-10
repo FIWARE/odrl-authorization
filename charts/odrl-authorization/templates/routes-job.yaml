@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 {{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
 apiVersion: batch/v1
 kind: Job
@@ -35,4 +36,5 @@ spec:
 
       restartPolicy: Never
   backoffLimit: 10
+{{- end }}
 {{- end }}

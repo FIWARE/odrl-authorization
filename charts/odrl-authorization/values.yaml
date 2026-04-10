@@ -1,3 +1,5 @@
+# -- Enable the chart. When used as a subchart, set to false to disable all resources.
+enabled: true
 # -- String to fully override common.names.fullname
 fullnameOverride: ''
 # -- String to fully override common.names.namespace
