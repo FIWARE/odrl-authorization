@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 {{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
 {{- if $ingressConfig.enabled }}
 {{ $ingressClassName := default "apisix" $ingressConfig.config.kubernetes.ingressClass }}
@@ -69,4 +70,5 @@ data:
       {{- .Values.apisix.routes | toYaml | nindent 6 }}
     {{- end }}
     #END
+{{- end }}
 {{- end }}
