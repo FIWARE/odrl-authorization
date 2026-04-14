@@ -12,7 +12,7 @@ data:
   create-routes.sh: |-
     set -e
     {{- if .Values.apisix.catchAllRoute.enabled }}
-    curl -k -f -X POST {{ $adminUrl }}/apisix/admin/routes \
+    curl -k -f -X PUT {{ $adminUrl }}/apisix/admin/routes/{{ .Release.Name }}-catch-all \
       --header 'Accept: */*' \
       --header "X-API-KEY: ${API_KEY}" \
       --header 'Content-Type: application/json' \
@@ -42,7 +42,7 @@ data:
     {{- if .Values.apisix.routes }}
 
     {{- range $index, $route := .Values.apisix.routes }}
-    curl -k -f -X POST {{ $adminUrl }}/apisix/admin/routes \
+    curl -k -f -X PUT {{ $adminUrl }}/apisix/admin/routes/{{ $.Release.Name }}-{{ $index }} \
       --header 'Accept: */*' \
       --header "X-API-KEY: ${API_KEY}" \
       --header 'Content-Type: application/json' \

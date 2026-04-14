@@ -1,6 +1,6 @@
 {{- if .Values.enabled }}
 {{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
-{{- if $ingressConfig.enabled }}
+{{- if and $ingressConfig.enabled (ne .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd") }}
 {{ $ingressClassName := default "apisix" $ingressConfig.config.kubernetes.ingressClass }}
 {{- range $idx, $route := .Values.apisix.routes }}
 {{ $routeName := default (printf "%s-%d" ($route.host | replace "." "-") $idx) $route.name }}
