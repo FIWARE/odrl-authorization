@@ -1,5 +1,6 @@
 {{- if .Values.enabled }}
 {{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
+{{- $adminUrl := printf "http://%s:%s" (include "odrl-auth.apisix-admin-service" .) (toString (default 9180 .Values.apisix.apisix.admin.servicePort)) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -8,8 +9,20 @@ metadata:
   labels:
     {{- include "odrl-auth.labels" . | nindent 4 }}
 spec:
+  ttlSecondsAfterFinished: 300
   template:
     spec:
+      initContainers:
+        - name: wait-for-apisix
+          image: quay.io/curl/curl:8.1.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until curl -s -o /dev/null -w "%{http_code}" {{ $adminUrl }}/apisix/admin/routes | grep -qE "^(200|401)"; do
+                echo "Waiting for APISIX admin API..."
+                sleep 5
+              done
       containers:
         - name: register-routes
           image: quay.io/curl/curl:8.1.2
