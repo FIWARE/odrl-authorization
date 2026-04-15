@@ -4,114 +4,124 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.2.3)"
+        required: true
+        type: string
 
 jobs:
+  generate-version:
+    name: "Generate version"
+    runs-on: ubuntu-latest
 
-    generate-version:
-      name: "Generate version"
-      runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.out.outputs.version }}
 
-      outputs:
-        version: ${{ steps.out.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
 
-      steps:
-        - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: "17"
+          java-package: jdk
 
-        - uses: actions/setup-java@v5
-          with:
-            distribution: zulu
-            java-version: '17'
-            java-package: jdk
+      - id: pr
+        uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-        - id: pr
-          uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
-          with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Match semver label via bash
+        id: match-label-bash
+        run: |
+          LABELS=$(cat <<-END
+          ${{ steps.pr.outputs.labels }}
+          END
+          )
+          IFS='\n' read -ra LABEL <<< "$LABELS"
+          for i in "${LABEL[@]}"; do
+              echo $i
+              case $i in
+                  # Will just use the first occurence
+                  'major'|'minor'|'patch')
+                      echo "RELEASE_LABEL=$i" >> $GITHUB_OUTPUT
+                      break
+              esac
+          done
 
-        - name: Match semver label via bash
-          id: match-label-bash
-          run: |
-            LABELS=$(cat <<-END
-            ${{ steps.pr.outputs.labels }}
-            END
-            )
-            IFS='\n' read -ra LABEL <<< "$LABELS"
-            for i in "${LABEL[@]}"; do
-                echo $i
-                case $i in
-                    # Will just use the first occurence
-                    'major'|'minor'|'patch')
-                        echo "RELEASE_LABEL=$i" >> $GITHUB_OUTPUT
-                        break
-                esac
-            done
+      - uses: zwaldowski/semver-release-action@v4
+        with:
+          dry_run: true
+          bump: minor
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-        - uses: zwaldowski/semver-release-action@v4
-          with:
-            dry_run: true
-            bump: minor
-            github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set version output
+        id: out
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          fi
 
-        - name: Set version output
-          id: out
-          run: echo "version=${VERSION}" >> $GITHUB_OUTPUT
+  deploy:
+    name: "Release charts"
+    needs:
+      - "generate-version"
+    runs-on: ubuntu-latest
 
-    deploy:
-      name: "Release charts"
-      needs:
-        - "generate-version"
-      runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
-      steps:
-        - uses: actions/checkout@v5
+      - name: Fetch history
+        run: git fetch --prune --unshallow
 
-        - name: Fetch history
-          run: git fetch --prune --unshallow
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-        - name: Configure Git
-          run: |
-            git config user.name "$GITHUB_ACTOR"
-            git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - name: Install Helm
+        run: |
+          curl -fsSLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
 
-        - name: Install Helm
-          run: |
-            curl -fsSLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-            chmod 700 get_helm.sh
-            ./get_helm.sh
+      - name: Add repositories
+        run: |
+          for dir in $(ls -d charts/*/); do
+            helm dependency list $dir 2> /dev/null | tail +2 |  sed '$d' | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
+          done
 
-        - name: Add repositories
-          run: |
-            for dir in $(ls -d charts/*/); do
-              helm dependency list $dir 2> /dev/null | tail +2 |  sed '$d' | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
-            done
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_SKIP_EXISTING: true
 
-        - name: Run chart-releaser
-          uses: helm/chart-releaser-action@v1.7.0
-          env:
-            CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-            CR_SKIP_EXISTING: true
-
-    git-release:
-      name: "Create Git Release"
-      needs: ["generate-version", "deploy"]
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v5
-        - name: Install helm-docs
-          run: |
-            wget -O /tmp/helm-docs.tar.gz https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
-            tar -xf /tmp/helm-docs.tar.gz  -C /tmp
-        - name: Add chart properties to README.md
-          continue-on-error: true
-          run: |
-            export PATH=$PATH:/tmp
-            .github/scripts/add-to-readme.sh
-            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "github-actions[bot]"
-            git status
-            git diff --quiet README.md || (git add README.md && git commit -m "Update chart properties")
-        - name: Generate Table of contents
-          uses: technote-space/toc-generator@v4
-          with:
-            TARGET_PATHS: "./README.md"
-            COMMIT_MESSAGE: "Update ToC"
+  git-release:
+    name: "Create Git Release"
+    needs: ["generate-version", "deploy"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install helm-docs
+        run: |
+          wget -O /tmp/helm-docs.tar.gz https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz
+          tar -xf /tmp/helm-docs.tar.gz  -C /tmp
+      - name: Add chart properties to README.md
+        continue-on-error: true
+        run: |
+          export PATH=$PATH:/tmp
+          .github/scripts/add-to-readme.sh
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git status
+          git diff --quiet README.md || (git add README.md && git commit -m "Update chart properties")
+      - name: Generate Table of contents
+        uses: technote-space/toc-generator@v4
+        with:
+          TARGET_PATHS: "./README.md"
+          COMMIT_MESSAGE: "Update ToC"
