@@ -31,6 +31,11 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
     - [2. With ETCD and without the Ingress Controller](#2-with-etcd-and-without-the-ingress-controller)
     - [3. Without ETCD and with the Ingress Controller](#3-without-etcd-and-with-the-ingress-controller)
     - [4. Without ETCD and without the Ingress Controller](#4-without-etcd-and-without-the-ingress-controller)
+  - [Admin API](#admin-api)
+  - [Route Initialization](#route-initialization)
+    - [Admin API available and Ingress Controller disabled](#admin-api-available-and-ingress-controller-disabled)
+    - [Ingress Controller enabled](#ingress-controller-enabled)
+    - [Fallback: static ConfigMap](#fallback-static-configmap)
   - [Values](#values)
   - [How to contribute](#how-to-contribute)
   - [License](#license)
@@ -130,6 +135,8 @@ the [test-scenarios](./it/src/test/resources/it/mvds_basic.feature) against it.
 
 APISIX can operate in four distinct deployment modes. Each mode determines how routes are stored, managed, and persisted, as well as which components are responsible for maintaining the routing configuration.
 
+> **Note:** The modes described here cover the four APISIX configurations supported by this chart. Additional deployment scenarios are documented at [Apisix Documentation](https://apisix.apache.org/docs/apisix/deployment-modes/).
+
 ### Comparison Table
 
 | Mode                                               | ETCD | Ingress Controller | Route Source                               | Persistence                    | Notes                                      |
@@ -155,8 +162,6 @@ apisix:
       role: traditional
       role_traditional:
         config_provider: yaml
-	  standalone:
-		existingConfigMap: ""
   etcd:
     enabled: true
 ```
@@ -201,8 +206,8 @@ apisix:
       role: traditional
       role_traditional:
         config_provider: yaml
-	  standalone:
-		existingConfigMap: ""
+      standalone:
+        existingConfigMap: ""
   etcd:
     enabled: false
 ```
@@ -230,9 +235,103 @@ apisix:
     enabled: false
 ```
 
-For mor information, please check the oficial APISIX documentation on [deployment modes](https://apisix.apache.org/docs/apisix/deployment-modes/) and the [APISIX Helm Chart documentation](https://github.com/apache/apisix-helm-chart/tree/master) for configuration details.
+For more information, please check the official APISIX documentation on [deployment modes](https://apisix.apache.org/docs/apisix/deployment-modes/) and the [APISIX Helm Chart documentation](https://github.com/apache/apisix-helm-chart/tree/master) for configuration details.
+
+---
+
+## Admin API
+
+The APISIX Admin API is not available in all deployment configurations. It is only active for the following combinations of deployment mode, role, and config provider:
+
+<table>
+  <thead>
+    <tr>
+      <th><code>deployment.mode</code></th>
+      <th><code>deployment.role</code></th>
+      <th><code>config_provider</code></th>
+      <th>Admin API</th>
+      <th>Minimum configuration</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>traditional</code></td>
+      <td>—</td>
+      <td><code>etcd</code></td>
+      <td>✔️</td>
+      <td><pre><code>apisix:
+  etcd:
+    enabled: true
+  apisix:
+    admin:
+      enabled: true
+    deployment:
+      mode: traditional
+      role_traditional:
+        config_provider: etcd</code></pre></td>
+    </tr>
+    <tr>
+      <td><code>standalone</code></td>
+      <td><code>traditional</code></td>
+      <td>—</td>
+      <td>✔️</td>
+      <td><pre><code>apisix:
+  etcd:
+    enabled: true
+  apisix:
+    admin:
+      enabled: true
+    deployment:
+      mode: standalone
+      role: traditional</code></pre></td>
+    </tr>
+    <tr>
+      <td><code>decoupled</code></td>
+      <td><code>control_plane</code></td>
+      <td><code>etcd</code> (default)</td>
+      <td>✔️</td>
+      <td><pre><code>apisix:
+  etcd:
+    enabled: true
+  apisix:
+    admin:
+      enabled: true
+    deployment:
+      mode: decoupled
+      role: control_plane</code></pre></td>
+    </tr>
+    <tr>
+      <td>Any other combination</td>
+      <td>—</td>
+      <td>—</td>
+      <td>❌</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+## Route Initialization
+
+How routes are registered into APISIX depends on which components are active in the chosen deployment mode.
+
+### Admin API available and Ingress Controller disabled
+
+When the [Admin API is active](#admin-api) and `apisix.ingress-controller.enabled: false`, the chart deploys a Kubernetes `Job` as a Helm `post-install`/`post-upgrade` hook. The job waits for APISIX to be ready and then pushes all configured routes via the Admin API using `PUT` requests.
+
+Each route is registered under a **fixed, deterministic ID** derived from the Helm release name (e.g. `<release-name>-catch-all`, `<release-name>-0`). Using `PUT` with a stable ID guarantees idempotency: every install or upgrade will update the existing route in place rather than creating duplicates, ensuring the running configuration always reflects the chart values.
+
+### Ingress Controller enabled
+
+When `apisix.ingress-controller.enabled: true`, the chart renders [`ApisixRoute`](https://apisix.apache.org/docs/ingress-controller/references/apisix-route/) CRDs instead of using the Admin API. The Ingress Controller watches these custom resources and synchronises them into APISIX automatically on every install and upgrade.
+
+### Fallback: static ConfigMap
+
+When neither of the above applies (e.g. standalone `data_plane` mode), the chart renders a ConfigMap (`apisix-routes`) containing a static `apisix.yaml`. APISIX mounts this ConfigMap at startup and loads the routes from it. The configuration only changes when the ConfigMap is updated, which happens on each Helm install or upgrade.
 
 <!-- BEGIN HELM DOCS -->
+
 
 
 ## Values

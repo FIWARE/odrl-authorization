@@ -1,5 +1,16 @@
-{{- if .Values.enabled }}
-{{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
+{{- if and .Values.enabled .Values.apisix.enabled }}
+{{- $traditionalMode := and (eq .Values.apisix.apisix.deployment.mode "traditional") (eq .Values.apisix.apisix.deployment.role_traditional.config_provider "etcd") }}
+{{- $standaloneTraditional := and (eq .Values.apisix.apisix.deployment.mode "standalone") (eq .Values.apisix.apisix.deployment.role "traditional") }}
+{{- $decoupledControlPlane := and (eq .Values.apisix.apisix.deployment.mode "decoupled") (eq .Values.apisix.apisix.deployment.role "control_plane") }}
+{{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
+{{/* If ingress controller is enabled it will use custom resources */}}
+{{/* It requires admin endpoint and it is only available if one of these modes is enabled
+  - mode: traditional, role_traditional: etcd
+  - mode: standalone, role: traditional
+  - mode: decoupled, role: control_plane
+ */}}
+{{- if and (not $ingressConfig.enabled) (or $traditionalMode $standaloneTraditional $decoupledControlPlane) }}
+{{- $adminUrl := printf "http://%s:%s" (include "odrl-auth.apisix-admin-service" .) (toString (default 9180 .Values.apisix.apisix.admin.servicePort)) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -7,12 +18,34 @@ metadata:
   namespace: {{ $.Release.Namespace | quote }}
   labels:
     {{- include "odrl-auth.labels" . | nindent 4 }}
+    {{- with .Values.apisix.routeJob.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.apisix.routeJob.annotations | nindent 4 }}
+    {{- with .Values.apisix.routeJob.extraAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
+  ttlSecondsAfterFinished: {{ .Values.apisix.routeJob.ttlSecondsAfterFinished }}
   template:
     spec:
+      initContainers:
+        - name: wait-for-apisix
+          image: {{ .Values.apisix.routeJob.image.repository }}:{{ .Values.apisix.routeJob.image.tag }}
+          imagePullPolicy: {{ .Values.apisix.routeJob.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until curl -so /dev/null -w "%{http_code}" {{ $adminUrl }}/apisix/admin/routes | grep -qE "^(200|401|403)"; do
+                echo "Waiting for APISIX admin API..."
+                sleep 5
+              done
       containers:
         - name: register-routes
-          image: quay.io/curl/curl:8.1.2
+          image: {{ .Values.apisix.routeJob.image.repository }}:{{ .Values.apisix.routeJob.image.tag }}
+          imagePullPolicy: {{ .Values.apisix.routeJob.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "/bin/create-routes.sh" ]
           env:
             - name: API_KEY
@@ -33,7 +66,6 @@ spec:
           configMap:
             name: apisix-routes-script
             defaultMode: 0755
-
       restartPolicy: Never
   backoffLimit: 10
 {{- end }}

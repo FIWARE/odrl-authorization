@@ -1,5 +1,8 @@
 {{- if .Values.enabled }}
-{{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
+{{- $ingressConfig := (index .Values.apisix "ingress-controller") }}
+{{- $traditionalMode := and (eq .Values.apisix.apisix.deployment.mode "traditional") (eq .Values.apisix.apisix.deployment.role_traditional.config_provider "yaml") }}
+{{- $decoupledDataPlaneMode := and (eq .Values.apisix.apisix.deployment.mode "standalone") (eq .Values.apisix.apisix.deployment.role "data_plane") (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "yaml") }}
+{{/* It requires custom crds and they are only available if ingress controller is enabled */}}
 {{- if $ingressConfig.enabled }}
 {{ $ingressClassName := default "apisix" $ingressConfig.config.kubernetes.ingressClass }}
 {{- range $idx, $route := .Values.apisix.routes }}
@@ -37,7 +40,7 @@ spec:
     {{- end }}
 ---
 {{- end }}
-{{- else }}
+{{- else if or $traditionalMode $decoupledDataPlaneMode }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
