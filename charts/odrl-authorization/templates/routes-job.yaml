@@ -18,27 +18,34 @@ metadata:
   namespace: {{ $.Release.Namespace | quote }}
   labels:
     {{- include "odrl-auth.labels" . | nindent 4 }}
+    {{- with .Values.apisix.routeJob.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    {{- toYaml .Values.apisix.routeJob.annotations | nindent 4 }}
+    {{- with .Values.apisix.routeJob.extraAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
-  ttlSecondsAfterFinished: 300
+  ttlSecondsAfterFinished: {{ .Values.apisix.routeJob.ttlSecondsAfterFinished }}
   template:
     spec:
       initContainers:
         - name: wait-for-apisix
-          image: quay.io/curl/curl:8.1.2
+          image: {{ .Values.apisix.routeJob.image.repository }}:{{ .Values.apisix.routeJob.image.tag }}
+          imagePullPolicy: {{ .Values.apisix.routeJob.image.pullPolicy }}
           command:
             - /bin/sh
             - -c
             - |
-              until curl -s -o /dev/null -w "%{http_code}" {{ $adminUrl }}/apisix/admin/routes | grep -qE "^(200|401)"; do
+              until curl -so /dev/null -w "%{http_code}" {{ $adminUrl }}/apisix/admin/routes | grep -qE "^(200|401|403)"; do
                 echo "Waiting for APISIX admin API..."
                 sleep 5
               done
       containers:
         - name: register-routes
-          image: quay.io/curl/curl:8.1.2
+          image: {{ .Values.apisix.routeJob.image.repository }}:{{ .Values.apisix.routeJob.image.tag }}
+          imagePullPolicy: {{ .Values.apisix.routeJob.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "/bin/create-routes.sh" ]
           env:
             - name: API_KEY
@@ -59,7 +66,6 @@ spec:
           configMap:
             name: apisix-routes-script
             defaultMode: 0755
-
       restartPolicy: Never
   backoffLimit: 10
 {{- end }}

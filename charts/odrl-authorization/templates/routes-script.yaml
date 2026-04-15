@@ -1,5 +1,8 @@
 {{- if .Values.enabled }}
-{{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
+{{- $traditionalMode := and (eq .Values.apisix.apisix.deployment.mode "traditional") (eq .Values.apisix.apisix.deployment.role_traditional.config_provider "etcd") }}
+{{- $standaloneTraditional := and (eq .Values.apisix.apisix.deployment.mode "standalone") (eq .Values.apisix.apisix.deployment.role "traditional") }}
+{{- $decoupledControlPlane := and (eq .Values.apisix.apisix.deployment.mode "decoupled") (eq .Values.apisix.apisix.deployment.role "control_plane") }}
+{{- if (and .Values.apisix.enabled (or $traditionalMode $standaloneTraditional $decoupledControlPlane)) }}
 {{- $adminUrl := printf "http://%s:%s" (include "odrl-auth.apisix-admin-service" .) (toString (default 9180 .Values.apisix.apisix.admin.servicePort)) }}
 apiVersion: v1
 kind: ConfigMap

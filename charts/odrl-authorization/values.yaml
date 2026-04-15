@@ -130,6 +130,24 @@ apisix:
   # ```
   #
   routes: []
+  routeJob:
+    # -- Image used by the route registration job and its init container
+    image:
+      repository: quay.io/curl/curl
+      tag: 8.1.2
+      pullPolicy: IfNotPresent
+    # -- Seconds to keep the completed job before automatic deletion
+    ttlSecondsAfterFinished: 300
+    # -- Number of retries before marking the job as failed
+    backoffLimit: 10
+    # -- Helm hook annotations controlling when the job runs and its cleanup policy
+    annotations:
+      "helm.sh/hook": post-install,post-upgrade
+      "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    # -- Additional annotations to add to the job
+    extraAnnotations: {}
+    # -- Additional labels to add to the job
+    extraLabels: {}
   etcd:
     enabled: true
 
