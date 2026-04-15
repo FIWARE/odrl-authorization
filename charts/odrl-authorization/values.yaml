@@ -42,6 +42,11 @@ apisix:
         existingConfigMap: "apisix-routes"
     admin:
       enabled: true
+      allow:
+        # -- The client IP CIDR allowed to access Apache APISIX Admin API service.
+        ipList:
+          - 127.0.0.1/24
+          - 10.0.0.0/8 # Kubernetes default CIDR
     customPlugins:
       enabled: true
       plugins:
