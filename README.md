@@ -32,6 +32,7 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
     - [3. Without ETCD and with the Ingress Controller](#3-without-etcd-and-with-the-ingress-controller)
     - [4. Without ETCD and without the Ingress Controller](#4-without-etcd-and-without-the-ingress-controller)
   - [Admin API](#admin-api)
+  - [Route Initialization](#route-initialization)
   - [Values](#values)
   - [How to contribute](#how-to-contribute)
   - [License](#license)
@@ -306,6 +307,25 @@ The APISIX Admin API is not available in all deployment configurations. It is on
   </tbody>
 </table>
 
+---
+
+## Route Initialization
+
+How routes are registered into APISIX depends on which components are active in the chosen deployment mode.
+
+### Admin API available and Ingress Controller disabled
+
+When the [Admin API is active](#admin-api) and `apisix.ingress-controller.enabled: false`, the chart deploys a Kubernetes `Job` as a Helm `post-install`/`post-upgrade` hook. The job waits for APISIX to be ready and then pushes all configured routes via the Admin API using `PUT` requests.
+
+Each route is registered under a **fixed, deterministic ID** derived from the Helm release name (e.g. `<release-name>-catch-all`, `<release-name>-0`). Using `PUT` with a stable ID guarantees idempotency: every install or upgrade will update the existing route in place rather than creating duplicates, ensuring the running configuration always reflects the chart values.
+
+### Ingress Controller enabled
+
+When `apisix.ingress-controller.enabled: true`, the chart renders [`ApisixRoute`](https://apisix.apache.org/docs/ingress-controller/references/apisix-route/) CRDs instead of using the Admin API. The Ingress Controller watches these custom resources and synchronises them into APISIX automatically on every install and upgrade.
+
+### Fallback: static ConfigMap
+
+When neither of the above applies (e.g. standalone `data_plane` mode), the chart renders a ConfigMap (`apisix-routes`) containing a static `apisix.yaml`. APISIX mounts this ConfigMap at startup and loads the routes from it. The configuration only changes when the ConfigMap is updated, which happens on each Helm install or upgrade.
 
 <!-- BEGIN HELM DOCS -->
 
