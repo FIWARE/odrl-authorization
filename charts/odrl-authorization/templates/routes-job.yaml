@@ -1,5 +1,15 @@
-{{- if .Values.enabled }}
-{{- if (and .Values.apisix.enabled  (eq .Values.apisix.apisix.deployment.role_data_plane.config_provider "etcd")) }}
+{{- if and .Values.enabled .Values.apisix.enabled }}
+{{- $traditionalMode := and (eq .Values.apisix.apisix.deployment.mode "traditional") (eq .Values.apisix.apisix.deployment.role_traditional.config_provider "etcd") }}
+{{- $standaloneTraditional := and (eq .Values.apisix.apisix.deployment.mode "standalone") (eq .Values.apisix.apisix.deployment.role "traditional") }}
+{{- $decoupledControlPlane := and (eq .Values.apisix.apisix.deployment.mode "decoupled") (eq .Values.apisix.apisix.deployment.role "control_plane") }}
+{{ $ingressConfig := (index .Values.apisix "ingress-controller") }}
+{{/* If ingress controller is enabled it will use custom resources */}}
+{{/* It requires admin endpoint and it is only available if one of these modes is enabled
+  - mode: traditional, role_traditional: etcd
+  - mode: standalone, role: traditional
+  - mode: decoupled, role: control_plane
+ */}}
+{{- if and (not $ingressConfig.enabled) (or $traditionalMode $standaloneTraditional $decoupledControlPlane) }}
 {{- $adminUrl := printf "http://%s:%s" (include "odrl-auth.apisix-admin-service" .) (toString (default 9180 .Values.apisix.apisix.admin.servicePort)) }}
 apiVersion: batch/v1
 kind: Job

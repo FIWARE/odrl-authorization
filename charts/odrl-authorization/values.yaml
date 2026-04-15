@@ -1,9 +1,9 @@
 # -- Enable the chart. When used as a subchart, set to false to disable all resources.
 enabled: true
 # -- String to fully override common.names.fullname
-fullnameOverride: ''
+fullnameOverride: ""
 # -- String to fully override common.names.namespace
-nameOverride: ''
+nameOverride: ""
 apisix:
   #-- Enable apisix deployment. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix) for more details
   enabled: true
@@ -30,12 +30,15 @@ apisix:
       role_data_plane:
         # enum: etcd, yaml
         config_provider: "yaml"
+      role_traditional: {}
+        # enum: etcd, yaml
+        # config_provider: "yaml"
       # -- Standalone rules configuration
       #
       # ref: https://apisix.apache.org/docs/apisix/deployment-modes/#standalone
       standalone:
         # -- Specifies the name of the ConfigMap that contains the rule configurations.
-        # The configuration must be set to the key named `apisix.yaml` in the configmap.
+        # The configuration must be set to the key named `apisix.yaml`  in the configmap.
         existingConfigMap: "apisix-routes"
     admin:
       enabled: true
@@ -51,7 +54,7 @@ apisix:
               - key: opa.lua
                 path: /opts/custom_plugins/apisix/plugins/opa.lua
               - key: helper.lua
-                path:  /opts/custom_plugins/apisix/plugins/helper.lua
+                path: /opts/custom_plugins/apisix/plugins/helper.lua
   extraContainers:
     # -- Deploy Open-Policy-Agent as sidecar
     - name: open-policy-agent
@@ -63,7 +66,7 @@ apisix:
           protocol: TCP
       args:
         - "run"
-        - "--ignore=.*"  # exclude hidden dirs created by Kubernetes
+        - "--ignore=.*" # exclude hidden dirs created by Kubernetes
         - "--server"
         - "-l"
         - "debug"
@@ -98,7 +101,7 @@ apisix:
       clientId: mySecuredService
       discoveryEndpoint: http://verifier:3000/services/mySecuredService/.well-known/openid-configuration
     opa:
-      host: 'http://localhost:8181'
+      host: "http://localhost:8181"
       policy: policy/main
       with_body: true
   # -- (dict) Configuration of routes for apisix
