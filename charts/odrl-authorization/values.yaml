@@ -175,6 +175,15 @@ opa:
     data:
       minDelay: 1
       maxDelay: 15
+  # -- configuration for the service to make opa available in the cluster
+  service:
+    # -- should the service to opa be enabled
+    enabled: false
+    # -- port to be used by the service
+    port: 8181
+    # -- service type
+    type: ClusterIP
+
 # -- integration of checks for the transfer process protocol
 tpp:
   # -- should checking for a running transfer process be enabled
