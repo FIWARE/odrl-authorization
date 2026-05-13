@@ -1,0 +1,23 @@
+{{- if .Values.opa.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa-service
+  namespace: {{ $.Release.Namespace | quote }}
+  {{- if .Values.opa.service.annotations }}
+  annotations:
+    {{ toYaml .Values.opa.service.annotations | nindent 4 }}
+  {{- end }}
+  labels:
+    {{ include "odrl-auth.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.opa.service.type }}
+  ports:
+    - port: {{ .Values.opa.service.port }}
+      targetPort: {{ .Values.opa.config.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: apisix
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
