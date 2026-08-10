@@ -20,6 +20,8 @@ data:
       --header "X-API-KEY: ${API_KEY}" \
       --header 'Content-Type: application/json' \
       --data-raw '{
+        "name": "Catch-all",
+        "desc": "Catches all requests that do not match any other route and forwards them to the configured upstream",
         "uri": "/*",
         "upstream": {
           "type": "roundrobin",
@@ -45,11 +47,14 @@ data:
     {{- if .Values.apisix.routes }}
 
     {{- range $index, $route := .Values.apisix.routes }}
+    {{- $host := (join ", " $route.hosts) | default $route.host }}
+    {{- $name := $route.name | default (printf "Route[s] to %s" $host) }}
+    {{- $namedRoute := merge (dict "name" $name) $route }}
     curl -k -f -X PUT {{ $adminUrl }}/apisix/admin/routes/{{ $.Release.Name }}-{{ $index }} \
       --header 'Accept: */*' \
       --header "X-API-KEY: ${API_KEY}" \
       --header 'Content-Type: application/json' \
-      --data-raw '{{ $route | toJson }}'
+      --data-raw '{{ $namedRoute | toJson }}'
     {{- end }}
     {{- end }}
 {{- end }}
