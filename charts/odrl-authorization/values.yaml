@@ -110,6 +110,7 @@ apisix:
       policy: policy/main
       with_body: true
   # -- (dict) Configuration of routes for apisix
+  # Available fields can be consulted at https://apisix.apache.org/docs/apisix/admin-api/#request-body-parameters
   # @raw
   #
   # ```yaml
