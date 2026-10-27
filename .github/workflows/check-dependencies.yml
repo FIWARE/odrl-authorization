@@ -1,0 +1,24 @@
+name: Check Chart Dependencies
+
+on:
+  workflow_dispatch:
+    inputs:
+      reviewers:
+        description: 'GitHub usernames to request review from (comma-separated)'
+        required: false
+        type: string
+        default: 'mortega5,vramperez'
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+
+  # Opens a pull request for every chart dependency with a newer stable version, see
+  # https://github.com/SEAMWARE/github-workflows
+  check-dependencies:
+    uses: SEAMWARE/github-workflows/.github/workflows/chart-dependencies.yml@v1
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      reviewers: ${{ inputs.reviewers || 'mortega5,vramperez' }}
