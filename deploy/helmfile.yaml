@@ -107,6 +107,8 @@ releases:
         ingress:
           enabled: false
         service:
+          # the tests reach the gateway on a fixed port of the node
+          type: NodePort
           http:
             nodePort: 30080
         catchAllRoute:

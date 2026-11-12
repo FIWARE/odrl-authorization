@@ -60,6 +60,14 @@ apisix:
                 path: /opts/custom_plugins/apisix/plugins/opa.lua
               - key: helper.lua
                 path: /opts/custom_plugins/apisix/plugins/helper.lua
+  service:
+    # -- type of the gateway Service. ClusterIP publishes the gateway only through an Ingress,
+    # with its host and TLS; NodePort or LoadBalancer also open it on the nodes or a load balancer.
+    type: ClusterIP
+    # -- traffic policy of the gateway Service, for NodePort and LoadBalancer. Empty: the
+    # Kubernetes default. apisix chart versions before 2.18 write it for every type, and the API
+    # server rejects it on a ClusterIP Service.
+    externalTrafficPolicy: ""
   extraContainers:
     # -- Deploy Open-Policy-Agent as sidecar
     - name: open-policy-agent
