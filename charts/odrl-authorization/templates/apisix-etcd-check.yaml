@@ -1,0 +1,17 @@
+{{- /*
+APISIX reads its configuration from etcd unless it runs in standalone mode or with the traditional
+role and `config_provider: yaml`. Without an etcd it starts with no routes, so the gateway serves
+nothing; this stops the release before that, which matters on an upgrade from a version that
+deployed etcd by default.
+*/ -}}
+{{- if and .Values.enabled .Values.apisix.enabled }}
+{{- $deployment := .Values.apisix.apisix.deployment }}
+{{- $provider := default "etcd" ($deployment.role_traditional | default dict).config_provider }}
+{{- $yamlTraditional := and (eq $deployment.role "traditional") (eq $provider "yaml") }}
+{{- $needsEtcd := and (ne $deployment.mode "standalone") (not $yamlTraditional) }}
+{{- /* the apisix chart ships http://etcd.host:2379 as an example host: it is not an etcd */}}
+{{- $externalHosts := without ((.Values.apisix.externalEtcd | default dict).host | default list) "http://etcd.host:2379" }}
+{{- if and $needsEtcd (not .Values.apisix.etcd.enabled) (not $externalHosts) }}
+{{- fail (printf "apisix.apisix.deployment.mode %q with role %q reads the APISIX configuration from etcd, and no etcd is configured: set apisix.etcd.enabled to true, or apisix.externalEtcd.host to an etcd of your own. apisix.etcd.enabled is false by default." $deployment.mode $deployment.role) }}
+{{- end }}
+{{- end }}

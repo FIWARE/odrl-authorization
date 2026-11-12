@@ -163,7 +163,11 @@ apisix:
     # -- Additional labels to add to the job
     extraLabels: {}
   etcd:
-    enabled: true
+    # -- deploy an etcd for APISIX. Only needed when APISIX reads its configuration from etcd: a
+    # mode other than `standalone`, unless the role is `traditional` with `config_provider: yaml`.
+    # The default standalone mode reads the routes from a ConfigMap. Instead of this one, an etcd
+    # of your own can be set in `apisix.externalEtcd.host`.
+    enabled: false
 
 opa:
   # -- config for open policy agent. Deployed as a PDP
