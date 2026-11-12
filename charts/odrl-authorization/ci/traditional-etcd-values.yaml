@@ -1,0 +1,10 @@
+# APISIX in traditional mode, reading its configuration from the etcd the chart deploys
+apisix:
+  apisix:
+    deployment:
+      mode: traditional
+      role: traditional
+      role_traditional:
+        config_provider: etcd
+  etcd:
+    enabled: true
