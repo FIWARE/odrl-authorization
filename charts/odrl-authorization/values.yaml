@@ -102,8 +102,10 @@ apisix:
         name: opa-config
   # -- configuration of a catchAll-route(e.g. /*)
   catchAllRoute:
-    # -- enable catch all route
-    enabled: true
+    # -- enable a route for every path (/*) to the upstream below, protected by the verifier and
+    # OPA. Off by default: the upstream and the verifier service below are examples, and
+    # `apisix.routes` publishes each service on its own host and paths.
+    enabled: false
     # -- configuration to connect the upstream broker
     upstream:
       url: http://my-broker:8080
