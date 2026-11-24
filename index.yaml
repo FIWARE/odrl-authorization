@@ -2,6 +2,24 @@ apiVersion: v1
 entries:
   odrl-authorization:
   - apiVersion: v2
+    created: "2026-11-24T09:37:21.916109486Z"
+    dependencies:
+    - condition: odrl-pap.enabled
+      name: odrl-pap
+      repository: https://fiware.github.io/helm-charts
+      version: 2.11.8
+    - condition: apisix.enabled
+      name: apisix
+      repository: https://apache.github.io/apisix-helm-chart
+      version: 3.1.0
+    description: Umbrella chart to deploy FIWARE ODRL Authorization
+    digest: 18fee07602e159f64513b6ce53affd285b272c90ec8d09ca1662ea63f569dc21
+    name: odrl-authorization
+    type: application
+    urls:
+    - https://github.com/FIWARE/odrl-authorization/releases/download/odrl-authorization-3.0.0/odrl-authorization-3.0.0.tgz
+    version: 3.0.0
+  - apiVersion: v2
     created: "2026-11-24T08:08:39.862009767Z"
     dependencies:
     - condition: odrl-pap.enabled
@@ -469,4 +487,4 @@ entries:
     urls:
     - https://github.com/FIWARE/odrl-authorization/releases/download/odrl-authorization-1.0.1/odrl-authorization-1.0.1.tgz
     version: 1.0.1
-generated: "2026-11-24T08:08:39.862196596Z"
+generated: "2026-11-24T09:37:21.916325942Z"
