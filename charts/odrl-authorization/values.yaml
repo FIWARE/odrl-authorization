@@ -10,9 +10,6 @@ apisix:
   ingress-controller:
     # -- Enable the ingress controller pod to read Kubernetes Ingress resources. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix-ingress-controller) for more details
     enabled: false
-    gatewayProxy:
-      # -- Controls whether to create a default GatewayProxy custom resource.
-      createDefault: true
     config:
       kubernetes:
         # -- Name of the ingress class created in kubernetes

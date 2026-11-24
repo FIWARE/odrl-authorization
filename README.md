@@ -20,6 +20,7 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
 
 - [Overview](#overview)
 - [Release Information](#release-information)
+  - [3.0.0 - APISIX chart v3 (breaking)](#300---apisix-chart-v3-breaking)
 - [Core components](#core-components)
   - [Deployment](#deployment)
     - [Local Deployment](#local-deployment)
@@ -58,6 +59,26 @@ The goal is to deliver a pluggable, standards-aligned authorization plane that:
 
 # Release Information
 FIWARE ODRL Authorization uses a continious integration flow, where every merge to the main-branch triggers a new release. Versioning follows Semantic Versioning 2.0.0, therefor only major changes will contain breaking changes. Important releases will be listed below, with additional information linked:
+
+## 3.0.0 - APISIX chart v3 (breaking)
+
+Bumps the bundled `apisix` subchart from `2.x` to `3.1.0` (chart major `2` -> `3`). The
+APISIX gateway version is unaffected; only the chart's values contract changes. Migration
+notes:
+
+* **Admin API keys.** The APISIX chart no longer ships the public default Admin API keys.
+  On a fresh install the chart auto-generates random keys into a Secret. An in-place
+  `helm upgrade` of a release that relied on the old defaults fails with `ADMIN KEY ERROR`.
+  Set `apisix.apisix.admin.credentials.admin` / `.viewer` (or `.secretName`) explicitly, or
+  disable the Admin API with `apisix.apisix.admin.enabled: false` (the `data_plane` / `yaml`
+  config provider used here does not need it).
+* **GatewayProxy.** `ingress-controller.gatewayProxy.createDefault` changed meaning: unset (the
+  new default) lets the APISIX chart create the GatewayProxy with the release's key, while `true`
+  now makes the controller chart create its own and requires a matching admin key. This chart no
+  longer forces `createDefault: true`.
+* **Helm 3.8+** is now required by the APISIX chart.
+* Do **not** upgrade with `--reuse-values`; re-pass the full values (or use
+  `--reset-then-reuse-values`, Helm 3.14+).
 
 # Core components
 
@@ -613,15 +634,6 @@ true
 </pre>
 </td>
 			<td>Enable the ingress controller pod to read Kubernetes Ingress resources. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix-ingress-controller) for more details</td>
-		</tr>
-		<tr>
-			<td>apisix.ingress-controller.gatewayProxy.createDefault</td>
-			<td>bool</td>
-			<td><pre lang="json">
-true
-</pre>
-</td>
-			<td>Controls whether to create a default GatewayProxy custom resource.</td>
 		</tr>
 		<tr>
 			<td>apisix.routes</td>
