@@ -59,6 +59,22 @@ The goal is to deliver a pluggable, standards-aligned authorization plane that:
 # Release Information
 FIWARE ODRL Authorization uses a continious integration flow, where every merge to the main-branch triggers a new release. Versioning follows Semantic Versioning 2.0.0, therefor only major changes will contain breaking changes. Important releases will be listed below, with additional information linked:
 
+## 3.0.0 - APISIX chart v3 (breaking)
+
+Bumps the bundled `apisix` subchart from `2.x` to `3.1.0` (chart major `2` -> `3`). The
+APISIX gateway version is unaffected; only the chart's values contract changes. Migration
+notes:
+
+* **Admin API keys.** The APISIX chart no longer ships the public default Admin API keys.
+  On a fresh install the chart auto-generates random keys into a Secret. An in-place
+  `helm upgrade` of a release that relied on the old defaults fails with `ADMIN KEY ERROR`.
+  Set `apisix.apisix.admin.credentials.admin` / `.viewer` (or `.secretName`) explicitly, or
+  disable the Admin API with `apisix.apisix.admin.enabled: false` (the `data_plane` / `yaml`
+  config provider used here does not need it).
+* **Helm 3.8+** is now required by the APISIX chart.
+* Do **not** upgrade with `--reuse-values`; re-pass the full values (or use
+  `--reset-then-reuse-values`, Helm 3.14+).
+
 # Core components
 
 * [APISIX (Policy Enforcement Point — PEP)](https://apisix.apache.org/): intercepts incoming requests, performs credential/token validation and forwards the authorization query to Open Policy Agent (OPA). APISIX enforces the decision returned by the PDP.
