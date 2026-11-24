@@ -20,6 +20,7 @@ This project is part of [FIWARE](https://www.fiware.org/). For more information 
 
 - [Overview](#overview)
 - [Release Information](#release-information)
+  - [3.0.0 - APISIX chart v3 (breaking)](#300---apisix-chart-v3-breaking)
 - [Core components](#core-components)
   - [Deployment](#deployment)
     - [Local Deployment](#local-deployment)
