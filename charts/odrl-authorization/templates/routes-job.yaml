@@ -48,14 +48,24 @@ spec:
           imagePullPolicy: {{ .Values.apisix.routeJob.image.pullPolicy }}
           command: [ "/bin/sh", "-c", "/bin/create-routes.sh" ]
           env:
+            {{- /* APISIX chart v3 ships no default admin key: a user-provided Secret
+                   (secretName) or inline key wins, otherwise fall back to the Secret the
+                   apisix chart generates (<apisix fullname>-admin-credentials, key "admin"),
+                   so the job uses the same key without anyone pinning one. */}}
+            {{- $creds := .Values.apisix.apisix.admin.credentials }}
             - name: API_KEY
-              {{- if .Values.apisix.apisix.admin.credentials.secretName }}
+              {{- if $creds.secretName }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.apisix.apisix.admin.credentials.secretName }}
-                  key: {{ .Values.apisix.apisix.admin.credentials.secretAdminKey | default "admin" }}
+                  name: {{ $creds.secretName }}
+                  key: {{ $creds.secretAdminKey | default "admin" }}
+              {{- else if $creds.admin }}
+              value: {{ $creds.admin | quote }}
               {{- else }}
-              value: {{ required "Either apisix.apisix.admin.credentials.admin or apisix.apisix.admin.credentials.secretName must be set" .Values.apisix.apisix.admin.credentials.admin | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "apisix.admin.credentials.generatedSecretName" (index .Subcharts "apisix") }}
+                  key: admin
               {{- end }}
           volumeMounts:
             - name: apisix-routes
