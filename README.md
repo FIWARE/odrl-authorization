@@ -72,6 +72,10 @@ notes:
   Set `apisix.apisix.admin.credentials.admin` / `.viewer` (or `.secretName`) explicitly, or
   disable the Admin API with `apisix.apisix.admin.enabled: false` (the `data_plane` / `yaml`
   config provider used here does not need it).
+* **GatewayProxy.** `ingress-controller.gatewayProxy.createDefault` changed meaning: unset (the
+  new default) lets the APISIX chart create the GatewayProxy with the release's key, while `true`
+  now makes the controller chart create its own and requires a matching admin key. This chart no
+  longer forces `createDefault: true`.
 * **Helm 3.8+** is now required by the APISIX chart.
 * Do **not** upgrade with `--reuse-values`; re-pass the full values (or use
   `--reset-then-reuse-values`, Helm 3.14+).
@@ -630,15 +634,6 @@ true
 </pre>
 </td>
 			<td>Enable the ingress controller pod to read Kubernetes Ingress resources. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix-ingress-controller) for more details</td>
-		</tr>
-		<tr>
-			<td>apisix.ingress-controller.gatewayProxy.createDefault</td>
-			<td>bool</td>
-			<td><pre lang="json">
-true
-</pre>
-</td>
-			<td>Controls whether to create a default GatewayProxy custom resource.</td>
 		</tr>
 		<tr>
 			<td>apisix.routes</td>
