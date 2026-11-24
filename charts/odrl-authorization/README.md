@@ -39,7 +39,6 @@ Umbrella chart to deploy FIWARE ODRL Authorization
 | apisix.ingress-controller.config.kubernetes.defaultIngressClass | bool | `false` | Set apisix ingress as default ingress in kubernetes |
 | apisix.ingress-controller.config.kubernetes.ingressClass | string | `"apisix"` | Name of the ingress class created in kubernetes |
 | apisix.ingress-controller.enabled | bool | `true` | Enable the ingress controller pod to read Kubernetes Ingress resources. See [chart documentation](https://artifacthub.io/packages/helm/apisix/apisix-ingress-controller) for more details |
-| apisix.ingress-controller.gatewayProxy.createDefault | bool | `true` | Controls whether to create a default GatewayProxy custom resource. |
 | apisix.routes | dict | `[]` | Configuration of routes for apisix
 
 ```yaml
